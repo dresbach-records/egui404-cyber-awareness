@@ -41,37 +41,42 @@ export default function App() {
   // SEO title and robots metadata for the client-side routes.
   useEffect(() => {
     const cleanPath = currentPath.split('?')[0];
-    const titles: Record<string, string> = {
-      '/': 'E GUI 404 — Conscientização e Segurança Digital',
-      '/archive': 'E GUI 404 — Arquivo de Ameaças',
-      '/threats': 'E GUI 404 — Inteligência de Ameaças',
-      '/cases': 'E GUI 404 — Casos Reais',
-      '/forum': 'E GUI 404 — Fórum',
-      '/education': 'E GUI 404 — Educação',
-      '/quiz': 'E GUI 404 — Quiz de Segurança Digital',
-      '/lab': 'E GUI 404 — Laboratório',
-      '/about': 'E GUI 404 — Sobre o Projeto',
-      '/report': 'E GUI 404 — Denunciar Golpe',
-      '/contact': 'E GUI 404 — Contato',
-      '/alerts': 'E GUI 404 — Alertas',
-      '/methodology': 'E GUI 404 — Metodologia',
-      '/sources/rnp': 'E GUI 404 — Fonte RNP',
-      '/privacy': 'E GUI 404 — Privacidade',
-      '/terms': 'E GUI 404 — Termos de Uso',
-      '/cookies': 'E GUI 404 — Cookies',
-      '/editorial-policy': 'E GUI 404 — Política Editorial',
-      '/disclaimer': 'E GUI 404 — Disclaimer',
-      '/admin': 'E GUI 404 — Administração'
+    const metadata: Record<string, { title: string; description: string }> = {
+      '/': { title: 'E GUI 404 — Conscientização e Segurança Digital', description: 'Informação, educação e conscientização sobre golpes online, fraudes digitais, ameaças cibernéticas e segurança na internet.' },
+      '/archive': { title: 'E GUI 404 — Arquivo de Ameaças e Fraudes', description: 'Arquivo público de informação sobre golpes online, fraudes digitais e ameaças cibernéticas.' },
+      '/threats': { title: 'E GUI 404 — Ameaças Digitais', description: 'Informação pública para reconhecer e compreender ameaças digitais.' },
+      '/cases': { title: 'E GUI 404 — Casos Reais de Fraudes Digitais', description: 'Casos documentados para educação e conscientização sobre fraudes digitais.' },
+      '/forum': { title: 'E GUI 404 — Fórum Privado', description: 'Área comunitária privada do E GUI 404.' },
+      '/education': { title: 'E GUI 404 — Educação em Segurança Digital', description: 'Conteúdos educativos para desenvolver hábitos mais seguros na internet.' },
+      '/quiz': { title: 'E GUI 404 — Quiz de Segurança Digital', description: 'Teste seus conhecimentos sobre segurança digital.' },
+      '/lab': { title: 'E GUI 404 — Laboratório', description: 'Ferramentas educativas para aprender sobre segurança digital.' },
+      '/about': { title: 'E GUI 404 — Sobre o Projeto', description: 'Conheça o projeto E GUI 404 e sua proposta de conscientização digital.' },
+      '/report': { title: 'E GUI 404 — Denunciar Golpe ou Fraude', description: 'Envie informações sobre um golpe ou fraude para análise responsável.' },
+      '/contact': { title: 'E GUI 404 — Contato', description: 'Entre em contato com o projeto E GUI 404.' },
+      '/alerts': { title: 'E GUI 404 — Alertas de Segurança', description: 'Alertas e informações públicas sobre segurança digital.' },
+      '/methodology': { title: 'E GUI 404 — Metodologia', description: 'Conheça os critérios e a metodologia do E GUI 404.' },
+      '/sources/rnp': { title: 'E GUI 404 — Fonte RNP', description: 'Informações sobre a fonte RNP utilizada pelo projeto.' },
+      '/privacy': { title: 'E GUI 404 — Privacidade', description: 'Política de privacidade do E GUI 404.' },
+      '/terms': { title: 'E GUI 404 — Termos de Uso', description: 'Termos de uso do E GUI 404.' },
+      '/cookies': { title: 'E GUI 404 — Cookies', description: 'Informações sobre o uso de cookies no E GUI 404.' },
+      '/editorial-policy': { title: 'E GUI 404 — Política Editorial', description: 'Política editorial do E GUI 404.' },
+      '/disclaimer': { title: 'E GUI 404 — Disclaimer', description: 'Avisos e limitações das informações publicadas pelo E GUI 404.' },
+      '/admin': { title: 'E GUI 404 — Administração', description: 'Área administrativa.' }
     };
-    const title = titles[cleanPath] || (cleanPath.startsWith('/archive/') ? 'E GUI 404 — Arquivo de Ameaças' : cleanPath.startsWith('/education/') ? 'E GUI 404 — Educação' : cleanPath.startsWith('/forum/') ? 'E GUI 404 — Fórum' : 'E GUI 404 — Página não encontrada');
-    const canonicalUrl = `https://egui404.fun${cleanPath === '/' ? '/' : cleanPath}`;
-    document.title = title;
+    const fallback = cleanPath.startsWith('/archive/') ? metadata['/archive'] : cleanPath.startsWith('/education/') ? metadata['/education'] : cleanPath.startsWith('/forum/') ? metadata['/forum'] : { title: 'E GUI 404 — Página não encontrada', description: 'A página solicitada não foi encontrada.' };
+    const currentMetadata = metadata[cleanPath] || fallback;
+    const isPrivate = cleanPath === '/admin' || cleanPath.startsWith('/admin/') || cleanPath === '/forum' || cleanPath.startsWith('/forum/');
+    const canonicalUrl = isPrivate ? 'https://egui404.fun/' : `https://egui404.fun${cleanPath === '/' ? '/' : cleanPath}`;
+    document.title = currentMetadata.title;
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
-    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[name="description"]')?.setAttribute('content', currentMetadata.description);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', currentMetadata.title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', currentMetadata.description);
     document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
-    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', currentMetadata.title);
+    document.querySelector('meta[name="twitter:description"]')?.setAttribute('content', currentMetadata.description);
     const robots = document.querySelector('meta[name="robots"]');
-    if (robots) robots.setAttribute('content', cleanPath === '/admin' || cleanPath.startsWith('/admin/') ? 'noindex, nofollow' : 'index, follow');
+    if (robots) robots.setAttribute('content', isPrivate ? 'noindex, nofollow' : 'index, follow');
   }, [currentPath]);
 
   // Sync with browser history
