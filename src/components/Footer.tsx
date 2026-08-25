@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Shield,
-  Send,
-  Lock,
-  ExternalLink,
-  CheckCircle,
-  Radio,
-  Terminal,
-  FileCheck,
-  MessageSquare
+  Lock
 } from 'lucide-react';
-import { NewsletterService } from '../services/dataService';
-import { SoundEngine } from '../services/audioService';
 import { ApiHealthBadge } from './ui/ApiHealthBadge';
 
 interface FooterProps {
@@ -20,26 +11,6 @@ interface FooterProps {
 }
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
-  const [email, setEmail] = useState('');
-  const [subscribed, setSubscribed] = useState(false);
-  const [subMsg, setSubMsg] = useState('');
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-
-    SoundEngine.playSuccessSound();
-    const res = NewsletterService.subscribe(email, 'WEEKLY_DIGEST');
-    if (res.success) {
-      setSubscribed(true);
-      setSubMsg(
-        language === 'pt'
-          ? 'Inscrição confirmada. Você receberá o Signal Report semanal.'
-          : 'Subscription confirmed. You will receive the weekly Signal Report.'
-      );
-      setEmail('');
-    }
-  };
 
   return (
     <footer id="footer-section" className="bg-[#030303] border-t border-[#1a1a1a] font-tech text-neutral-400 pt-14 pb-10">
@@ -70,15 +41,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
                 Fontes & Redes Oficiais:
               </span>
               <div className="flex items-center gap-3 text-neutral-400 text-xs">
-                {['YouTube', 'Instagram', 'TikTok', 'X (Twitter)', 'LinkedIn', 'Telegram'].map((net) => (
-                  <span
-                    key={net}
-                    className="hover:text-[#FF1A1A] transition-colors cursor-pointer text-[11px]"
-                    title={`Canal E GUI 404 no ${net}`}
-                  >
-                    {net}
-                  </span>
-                ))}
+                <span className="text-[11px] text-neutral-600">Canais oficiais em configuração.</span>
               </div>
             </div>
           </div>
@@ -213,35 +176,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
               Acompanhe o E GUI 404 pelo SIGNAL: <strong className="text-white">@egui404.fun</strong>
             </p>
 
-            {subscribed ? (
-              <div className="p-2.5 rounded bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 shrink-0 text-emerald-400" />
-                <span>{subMsg}</span>
-              </div>
-            ) : (
-              <form onSubmit={handleSubscribe} className="space-y-2">
-                <div className="relative">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu.email@dominio.com"
-                    className="w-full px-3 py-2 bg-neutral-900 border border-neutral-800 rounded text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-[#E00000]"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute right-1 top-1 bottom-1 px-2.5 bg-[#E00000] text-white rounded hover:bg-[#FF1A1A] transition-colors flex items-center justify-center cursor-pointer"
-                    title="Assinar"
-                  >
-                    <Send className="w-3 h-3" />
-                  </button>
-                </div>
-                <p className="text-[10px] text-neutral-600 font-sans leading-tight">
-                  Zero spam. Seus dados nunca serão comercializados. Em conformidade com a LGPD.
-                </p>
-              </form>
-            )}
+            <div className="p-3 rounded bg-[#090909] border border-[#1e1e1e] text-xs text-neutral-400">
+              <p className="font-mono text-[10px] tracking-wider text-amber-400">NEWSLETTER — BACKEND PENDENTE</p>
+              <p className="mt-1 font-sans leading-relaxed">A inscrição será disponibilizada quando o endpoint oficial estiver configurado.</p>
+            </div>
           </div>
         </div>
 
