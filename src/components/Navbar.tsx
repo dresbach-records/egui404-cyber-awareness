@@ -10,7 +10,8 @@ import {
   Eye,
   Flag,
   Globe,
-  Radio
+  Radio,
+  MessageSquare
 } from 'lucide-react';
 import { SoundEngine } from '../services/audioService';
 
@@ -52,6 +53,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { label: language === 'pt' ? 'ARQUIVO' : 'ARCHIVE', path: '/archive' },
     { label: language === 'pt' ? 'AMEAÇAS' : 'THREATS', path: '/threats' },
     { label: language === 'pt' ? 'CASOS' : 'CASES', path: '/cases' },
+    { label: language === 'pt' ? 'FÓRUM' : 'FORUM', path: '/forum' },
     { label: language === 'pt' ? 'EDUCAÇÃO' : 'EDUCATION', path: '/education' },
     { label: language === 'pt' ? 'SIMULADOR' : 'SIMULATOR', path: '/quiz' },
     { label: language === 'pt' ? 'LAB' : 'LAB', path: '/lab' },
@@ -111,7 +113,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <button
                   key={item.path}
                   onClick={() => handleNavClick(item.path)}
-                  className={`px-3 py-1.5 rounded text-xs font-bold tracking-wider transition-all relative ${
+                  className={`px-3 py-1.5 rounded text-xs font-bold tracking-wider transition-all relative cursor-pointer ${
                     isActive
                       ? 'text-[#FF1A1A] bg-[#E00000]/10 border border-[#E00000]/30'
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-900/60'
@@ -141,11 +143,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onOpenSearch();
               }}
               title="Pesquisa Global (Cmd+K)"
-              className="flex items-center gap-2 px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-[#444] transition-all text-xs"
+              className="flex items-center gap-2 px-2.5 py-1.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-[#444] transition-all text-xs cursor-pointer"
             >
               <Search className="w-3.5 h-3.5 text-[#FF1A1A]" />
               <span className="hidden md:inline text-neutral-400 text-[11px]">Buscar</span>
-              <kbd className="hidden md:inline text-[9px] px-1 bg-neutral-800 rounded text-neutral-500">
+              <kbd className="hidden md:inline text-[9px] px-1 bg-neutral-800 rounded text-neutral-500 font-mono">
                 ⌘K
               </kbd>
             </button>
@@ -156,7 +158,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onToggleSound();
               }}
               title={soundEnabled ? 'Desativar Sons' : 'Ativar Efeitos Sonoros'}
-              className={`p-1.5 rounded border transition-colors ${
+              className={`p-1.5 rounded border transition-colors cursor-pointer ${
                 soundEnabled
                   ? 'bg-[#E00000]/15 border-[#E00000]/40 text-[#FF5555]'
                   : 'bg-neutral-900 border-neutral-800 text-neutral-500 hover:text-neutral-300'
@@ -169,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onToggleReducedMotion}
               title={reducedMotion ? 'Ativar Animações' : 'Modo Movimento Reduzido'}
-              className={`p-1.5 rounded border transition-colors ${
+              className={`p-1.5 rounded border transition-colors cursor-pointer ${
                 reducedMotion
                   ? 'bg-amber-950/30 border-amber-500/40 text-amber-400'
                   : 'bg-neutral-900 border-neutral-800 text-neutral-500 hover:text-neutral-300'
@@ -182,7 +184,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={onToggleLanguage}
               title="Alterar Idioma (PT / EN)"
-              className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-[11px] font-bold uppercase transition-colors flex items-center gap-1"
+              className="px-2 py-1 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-[11px] font-bold uppercase transition-colors flex items-center gap-1 cursor-pointer"
             >
               <Globe className="w-3 h-3 text-[#FF1A1A]" />
               <span>{language.toUpperCase()}</span>
@@ -191,7 +193,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             {/* Report CTA */}
             <button
               onClick={() => handleNavClick('/report')}
-              className="px-3.5 py-1.5 rounded bg-[#E00000] text-white hover:bg-[#FF1A1A] transition-all font-bold text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(224,0,0,0.3)] hover:shadow-[0_0_18px_rgba(224,0,0,0.5)]"
+              className="px-3.5 py-1.5 rounded bg-[#E00000] text-white hover:bg-[#FF1A1A] transition-all font-bold text-xs flex items-center gap-1.5 shadow-[0_0_12px_rgba(224,0,0,0.3)] hover:shadow-[0_0_18px_rgba(224,0,0,0.5)] cursor-pointer"
             >
               <Flag className="w-3.5 h-3.5" />
               <span>{language === 'pt' ? 'DENUNCIAR' : 'REPORT'}</span>

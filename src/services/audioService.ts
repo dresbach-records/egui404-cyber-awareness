@@ -49,6 +49,10 @@ class SoundEffectsEngine {
     this.playBeep(1200, 0.02, 'triangle', 0.02);
   }
 
+  public playClickSound() {
+    this.playBeep(1200, 0.02, 'triangle', 0.02);
+  }
+
   public playAlertSound() {
     this.playBeep(600, 0.08, 'sawtooth', 0.04);
     setTimeout(() => {

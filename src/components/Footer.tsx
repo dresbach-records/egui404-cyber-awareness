@@ -7,7 +7,8 @@ import {
   CheckCircle,
   Radio,
   Terminal,
-  FileCheck
+  FileCheck,
+  MessageSquare
 } from 'lucide-react';
 import { NewsletterService } from '../services/dataService';
 import { SoundEngine } from '../services/audioService';
@@ -65,7 +66,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
             {/* Social Channels */}
             <div className="pt-2">
               <span className="text-[10px] uppercase text-neutral-500 tracking-wider block mb-2 font-bold">
-                Canais Oficiais:
+                Fontes & Redes Oficiais:
               </span>
               <div className="flex items-center gap-3 text-neutral-400 text-xs">
                 {['YouTube', 'Instagram', 'TikTok', 'X (Twitter)', 'LinkedIn', 'Telegram'].map((net) => (
@@ -88,33 +89,43 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => onNavigate('/archive')} className="hover:text-white transition-colors">
-                  Scam Archive
+                <button onClick={() => onNavigate('/archive')} className="hover:text-white transition-colors cursor-pointer">
+                  Scam Archive (Arquivo de Golpes)
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/threats')} className="hover:text-white transition-colors">
-                  Threat Intelligence
+                <button onClick={() => onNavigate('/threats')} className="hover:text-white transition-colors cursor-pointer">
+                  Threat Intelligence Matrix
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/cases')} className="hover:text-white transition-colors">
-                  Investigative Cases
+                <button onClick={() => onNavigate('/cases')} className="hover:text-white transition-colors cursor-pointer">
+                  Investigative Cases (Dossiês)
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/education')} className="hover:text-white transition-colors">
-                  Cyber Education
+                <button onClick={() => onNavigate('/forum')} className="hover:text-white text-[#FF4D4D] transition-colors cursor-pointer font-bold">
+                  Comunidade / Fórum Defensivo
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/quiz')} className="hover:text-white transition-colors">
-                  Simulador de Golpes
+                <button onClick={() => onNavigate('/alerts')} className="hover:text-white transition-colors cursor-pointer">
+                  Boletim de Alertas Ativos
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/lab')} className="hover:text-white transition-colors">
-                  Cyber Lab
+                <button onClick={() => onNavigate('/education')} className="hover:text-white transition-colors cursor-pointer">
+                  Cyber Education & Guias
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/quiz')} className="hover:text-white transition-colors cursor-pointer">
+                  Simulador de Reconhecimento
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/lab')} className="hover:text-white transition-colors cursor-pointer">
+                  Cyber Lab Interativo
                 </button>
               </li>
             </ul>
@@ -123,42 +134,52 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
           {/* Institutional & Legal */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-widest border-l-2 border-neutral-700 pl-2">
-              {language === 'pt' ? 'Institucional' : 'Institutional'}
+              {language === 'pt' ? 'Fontes & Governança' : 'Sources & Governance'}
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => onNavigate('/about')} className="hover:text-white transition-colors">
+                <button onClick={() => onNavigate('/methodology')} className="hover:text-white text-[#FF7777] font-bold transition-colors cursor-pointer flex items-center gap-1">
+                  <span>Metodologia & Fontes</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/archive/sources/rnp-cais')} className="hover:text-white text-neutral-300 transition-colors cursor-pointer flex items-center gap-1">
+                  <span>Fonte: Catálogo RNP/CAIS</span>
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/about')} className="hover:text-white transition-colors cursor-pointer">
                   Sobre O Observador
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/editorial-policy')} className="hover:text-white transition-colors">
+                <button onClick={() => onNavigate('/report')} className="hover:text-white transition-colors cursor-pointer text-amber-400">
+                  Denunciar Golpe / Correção
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/editorial-policy')} className="hover:text-white transition-colors cursor-pointer">
                   Política Editorial
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/privacy')} className="hover:text-white transition-colors">
+                <button onClick={() => onNavigate('/privacy')} className="hover:text-white transition-colors cursor-pointer">
                   Privacidade & LGPD
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/terms')} className="hover:text-white transition-colors">
-                  Termos de Uso
+                <button onClick={() => onNavigate('/terms')} className="hover:text-white transition-colors cursor-pointer">
+                  Termos de Uso & Responsabilidade
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/cookies')} className="hover:text-white transition-colors">
-                  Política de Cookies
+                <button onClick={() => onNavigate('/contact')} className="hover:text-white transition-colors cursor-pointer">
+                  Contato Seguro & Chave PGP
                 </button>
               </li>
               <li>
-                <button onClick={() => onNavigate('/contact')} className="hover:text-white transition-colors">
-                  Contato Seguro
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('/admin')} className="text-neutral-600 hover:text-neutral-400 transition-colors text-[10px]">
-                  [Admin Preview]
+                <button onClick={() => onNavigate('/admin')} className="text-neutral-600 hover:text-neutral-400 transition-colors text-[10px] cursor-pointer">
+                  [Cockpit / Triagem Admin]
                 </button>
               </li>
             </ul>
@@ -192,14 +213,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
                   />
                   <button
                     type="submit"
-                    className="absolute right-1 top-1 bottom-1 px-2.5 bg-[#E00000] text-white rounded hover:bg-[#FF1A1A] transition-colors flex items-center justify-center"
+                    className="absolute right-1 top-1 bottom-1 px-2.5 bg-[#E00000] text-white rounded hover:bg-[#FF1A1A] transition-colors flex items-center justify-center cursor-pointer"
                     title="Assinar"
                   >
                     <Send className="w-3 h-3" />
                   </button>
                 </div>
                 <p className="text-[10px] text-neutral-600 font-sans leading-tight">
-                  Zero spam. Seus dados nunca serão compartilhados. Consentimento LGPD garantido.
+                  Zero spam. Seus dados nunca serão comercializados. Em conformidade com a LGPD.
                 </p>
               </form>
             )}
@@ -215,7 +236,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
             </span>
           </div>
           <p className="font-tech text-[11px]">
-            © {new Date().getFullYear()} E GUI 404 (恶鬼) · All rights reserved.
+            © {new Date().getFullYear()} E GUI 404 (恶鬼) · Cyber Awareness Platform.
           </p>
         </div>
       </div>

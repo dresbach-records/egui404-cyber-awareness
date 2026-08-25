@@ -7,6 +7,7 @@ import { HomeView } from './components/views/HomeView';
 import { ArchiveView } from './components/views/ArchiveView';
 import { ThreatsView } from './components/views/ThreatsView';
 import { CasesView } from './components/views/CasesView';
+import { ForumView } from './components/views/ForumView';
 import { EducationView } from './components/views/EducationView';
 import { QuizView } from './components/views/QuizView';
 import { LabView } from './components/views/LabView';
@@ -16,6 +17,8 @@ import { ContactView } from './components/views/ContactView';
 import { AlertsView } from './components/views/AlertsView';
 import { AdminView } from './components/views/AdminView';
 import { LegalView } from './components/views/LegalViews';
+import { RnpSourceView } from './components/views/RnpSourceView';
+import { MethodologyView } from './components/views/MethodologyView';
 import { NotFoundView } from './components/views/NotFoundView';
 import { SoundEngine } from './services/audioService';
 
@@ -92,10 +95,20 @@ export default function App() {
       return <HomeView onNavigate={navigate} language={language} />;
     }
 
+    // RNP / CAIS Dedicated Source Profile
+    if (cleanPath === '/archive/sources/rnp-cais' || cleanPath === '/archive/sources/rnp' || cleanPath === '/sources/rnp') {
+      return <RnpSourceView onNavigate={navigate} language={language} />;
+    }
+
     // Scam Archive with potential slug: /archive or /archive/:slug
     if (cleanPath === '/archive' || cleanPath.startsWith('/archive/')) {
       const slug = cleanPath.startsWith('/archive/') ? cleanPath.replace('/archive/', '') : undefined;
       return <ArchiveView initialSlug={slug} onNavigate={navigate} language={language} />;
+    }
+
+    // Methodology & Standards
+    if (cleanPath === '/methodology') {
+      return <MethodologyView onNavigate={navigate} language={language} />;
     }
 
     // Threat Intelligence Matrix
@@ -110,6 +123,20 @@ export default function App() {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get('id') || undefined;
       return <CasesView initialCaseId={id} onNavigate={navigate} language={language} />;
+    }
+
+    // Community Forum: /forum or /forum/topic/:slug
+    if (cleanPath === '/forum' || cleanPath.startsWith('/forum/')) {
+      let slug: string | undefined = undefined;
+      if (cleanPath.startsWith('/forum/topic/')) {
+        slug = cleanPath.replace('/forum/topic/', '');
+      } else if (cleanPath.startsWith('/forum/')) {
+        const seg = cleanPath.replace('/forum/', '');
+        if (seg && !seg.startsWith('category/')) {
+          slug = seg;
+        }
+      }
+      return <ForumView initialThreadSlug={slug} onNavigate={navigate} language={language} />;
     }
 
     // Cyber Education with potential slug: /education or /education/:slug
@@ -133,7 +160,7 @@ export default function App() {
       return <AboutView onNavigate={navigate} language={language} />;
     }
 
-    // Whistleblower Report
+    // Whistleblower / Incident Report
     if (cleanPath === '/report') {
       return <ReportView onNavigate={navigate} language={language} />;
     }

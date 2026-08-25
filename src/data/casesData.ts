@@ -4,143 +4,186 @@ export const CASES_DATA: CaseFile[] = [
   {
     id: 'case-0042',
     caseNumber: 'CASE #0042',
-    title: 'Operação Falso Fundo: Desmantelamento de Esquema de Pirâmide com Robô de Investimento Fictício',
-    date: '2026-07-28',
+    title: 'Operação Falso Algoritmo: Esquema de Pirâmide com Robô de Investimento Fictício',
+    date: '2026-02-15',
     country: 'Brasil / Internacional',
     category: 'FAKE INVESTMENTS',
     impactLevel: 'EXTREME',
     status: 'ANALYZED',
-    summary: 'Análise detalhada de um esquema de pirâmide financeira que vitimou mais de 1.400 investidores por meio de uma plataforma falsa que simulava operações automatizadas de inteligência artificial com suposto rendimento garantido de 4% ao dia.',
+    summary: 'Análise detalhada de um esquema de pirâmide financeira com plataforma falsa que simulava operações automatizadas de criptoativos com rentabilidade prometida de 4% ao dia, lesando centenas de investidores.',
     timeline: [
       {
-        timestamp: 'Dia 01',
+        timestamp: 'Mês 01',
         event: 'Atração Inicial',
         details: 'Anúncios ultra-segmentados nas redes sociais ofereciam "acesso exclusivo antecipado a um algoritmo de trading institucional".'
       },
       {
-        timestamp: 'Dia 07',
+        timestamp: 'Mês 02',
         event: 'Primeiro Teste & Falso Saque',
         details: 'Usuários depositaram R$ 100 e puderam sacar R$ 120 após 48 horas. A taxa de conversão para novos depósitos atingiu 84%.'
       },
       {
-        timestamp: 'Dia 30',
+        timestamp: 'Mês 03',
         event: 'Injeção de Capital Pesado',
         details: 'Criação de ranking de "Investidores Diamante" com incentivo de bônus por indicação de amigos e familiares.'
       },
       {
-        timestamp: 'Dia 45',
+        timestamp: 'Mês 04',
         event: 'Bloqueio Sistemático de Saques',
         details: 'A plataforma alegou "auditoria do órgão regulador internacional" e exigiu 20% do saldo total em taxa de liberação fiscal.'
       },
       {
-        timestamp: 'Dia 52',
+        timestamp: 'Mês 05',
         event: 'Colapso e Evasão',
         details: 'Servidores desligados e exclusão dos canais de suporte no Telegram. Ativos convertidos rapidamente em criptomoedas anônimas.'
       }
     ],
     attackAnatomy: {
-      initialContact: 'Tráfego pago patrocinado com deepfakes de celebridades do setor financeiro endossando o algoritmo.',
+      initialContact: 'Tráfego pago patrocinado com vídeos manipulados e depoimentos forjados de falsos investidores de sucesso.',
       manipulationTechnique: 'Reforço positivo imediato (saque pequeno liberado) somado ao medo de ficar de fora (FOMO - Fear of Missing Out).',
       exploitationStep: 'Dashboard customizado com números arbitrários sem qualquer integração real com bolsas ou corretoras autorizadas.',
       damageVector: 'Drenagem de economias de poupança e empréstimos pessoais tomados pelas vítimas acreditando em retorno certo.'
     },
     defensesLearned: [
-      'Nenhuma instituição séria promete rentabilidade fixa diária garantida.',
-      'A liberação de saques pequenos é a tática padrão de "isca" para encorajar depósitos de valor elevado.',
+      'Nenhuma instituição autorizada pela CVM promete rentabilidade fixa diária garantida em renda variável.',
+      'A liberação de saques pequenos iniciais é a tática clássica de "isca" para encorajar depósitos de valor elevado.',
       'A exigência de novo depósito para sacar o próprio dinheiro é prova definitiva de fraude.'
     ],
     sources: [
-      { title: 'Inquérito da Delegacia de Defraudações e Crimes Fazendários', sourceType: 'OFFICIAL_ALERT' },
-      { title: 'Boletim da Comissão de Valores Mobiliários (CVM)', sourceType: 'SECURITY_BULLETIN' }
+      {
+        organization: 'Comissão de Valores Mobiliários (CVM)',
+        title: 'Alerta sobre Esquemas de Investimentos Não Autorizados em Moedas Digitais',
+        url: 'https://gov.br/cvm',
+        type: 'GOVERNMENT',
+        isOfficial: true
+      },
+      {
+        organization: 'Polícia Federal',
+        title: 'Operações de Repressão a Pirâmides Financeiras e Crimes contra o Sistema Financeiro Nacional',
+        url: 'https://gov.br/pf',
+        type: 'LAW_ENFORCEMENT',
+        isOfficial: true
+      }
     ]
   },
   {
     id: 'case-0038',
     caseNumber: 'CASE #0038',
     title: 'Engenharia Social Corporativa via BEC (Business Email Compromise) com Spoofing de Diretoria',
-    date: '2026-06-15',
-    country: 'América Latina',
+    date: '2026-01-20',
+    country: 'Brasil',
     category: 'SOCIAL ENGINEERING',
     impactLevel: 'HIGH',
     status: 'ANALYZED',
-    summary: 'Ataque direcionado contra setor financeiro de média empresa onde criminosos utilizaram domínio similar (typosquatting) e dados coletados no LinkedIn para induzir transferência urgente a pretexto de aquisição confidencial.',
+    summary: 'Ataque de Business Email Compromise (BEC) que resultou no desvio de pagamento de fornecedor em uma média empresa de logística por meio de domínio clonado e e-mail falso do diretor financeiro.',
     timeline: [
       {
-        timestamp: 'Semana 01',
-        event: 'Reconhecimento Passivo',
-        details: 'Mapeamento de organograma da diretoria e analistas de contas a pagar por meio de postagens públicas no LinkedIn.'
+        timestamp: 'Semana 1',
+        event: 'Reconhecimento e Pesquisa',
+        details: 'Atacantes mapearam no LinkedIn a estrutura societária da empresa, o nome do CFO e a rotina da equipe contábil.'
       },
       {
-        timestamp: 'Semana 03',
+        timestamp: 'Semana 2',
         event: 'Registro de Domínio Espelho',
-        details: 'Registro do domínio `empresa-corporativo[.]com` (com apenas uma letra duplicada).'
+        details: 'Registro de domínio idêntico com variação de apenas uma letra (ex: empresa-logistica.com vs empresa-Iogistica.com).'
       },
       {
-        timestamp: 'Dia D',
-        event: 'Envio de E-mail de Urgência',
-        details: 'E-mail enviado na sexta-feira às 16h45 simulando o CEO em viagem internacional solicitando TED urgente para fechamento de contrato.'
+        timestamp: 'Semana 3',
+        event: 'Envio de Instrução de Pagamento Urgente',
+        details: 'E-mail enviado à analista financeira solicitando a liquidação prioritária de fatura de fornecedor em nova conta bancária.'
       },
       {
-        timestamp: 'Pós-Ataque',
-        event: 'Detecção na Segunda-feira',
-        details: 'A fraude só foi notada no início da semana seguinte na conciliação bancária matinal.'
+        timestamp: 'Semana 3 (+2h)',
+        event: 'Transferência e Descoberta',
+        details: 'O pagamento foi efetuado. A fraude só foi notada 10 dias depois, quando o fornecedor real cobrou a fatura original em atraso.'
       }
     ],
     attackAnatomy: {
-      initialContact: 'E-mail forjado com remetente aparentando ser a presidência da organização.',
-      manipulationTechnique: 'Princípio da autoridade hierárquica e restrição temporal (urgência de fechamento no final do expediente).',
-      exploitationStep: 'Quebra de processo de dupla aprovação devido ao clima de sigilo e pressão executiva.',
-      damageVector: 'Transferência financeira direta para conta intermediária pulverizada em múltiplos saques.'
+      initialContact: 'E-mail forjado utilizando domínio homógrafo e tom de voz idêntico ao do executivo sênior.',
+      manipulationTechnique: 'Hierarquia corporativa somada a pretexto de "acordo confidencial estratégico" que impedia perguntas na equipe.',
+      exploitationStep: 'Substituição dos dados bancários legítimos por conta de passagem em banco digital em nome de terceiro.',
+      damageVector: 'Prejuízo financeiro direto e perda de relacionamento comercial com fornecedor crítico.'
     },
     defensesLearned: [
-      'Todo pedido financeiro excepcional ou de valor elevado deve passar por confirmação telefônica ou presencial por canal pré-estabelecido.',
-      'Implementação rigorosa de políticas de e-mail (SPF, DKIM, DMARC com p=reject).',
-      'Cultura corporativa de segurança onde colaboradores são encorajados a checar ordens de superiores sem medo de represália.'
+      'Estabelecer protocolo obrigatório de dupla aprovação telefônica via canal conhecido para qualquer alteração de dados bancários.',
+      'Implementar autenticação rigorosa de e-mail (SPF, DKIM e DMARC com política de rejeição "p=reject").',
+      'Treinar equipes financeiras para desconfiar de pedidos de pagamento com pretexto de urgência ou sigilo fora do processo padrão.'
     ],
     sources: [
-      { title: 'Relatório Anual de Ameaças Corporativas e Fraudes BEC', sourceType: 'RESEARCH_REPORT' }
+      {
+        organization: 'FBI / Internet Crime Complaint Center (IC3)',
+        title: 'Business Email Compromise (BEC) Annual Threat Report',
+        url: 'https://ic3.gov',
+        type: 'LAW_ENFORCEMENT',
+        isOfficial: true
+      },
+      {
+        organization: 'CERT.br',
+        title: 'Recomendações para Prevenção de Fraudes de Substituição de Contas e BEC',
+        url: 'https://cartilha.cert.br',
+        type: 'SECURITY_RESEARCH',
+        isOfficial: true
+      }
     ]
   },
   {
-    id: 'case-0027',
-    caseNumber: 'CASE #0027',
-    title: 'Ataque de Phishing SMS (Smishing) Explorando Suposto Bloqueio de Cartão por Fraude',
-    date: '2026-05-10',
+    id: 'case-0029',
+    caseNumber: 'CASE #0029',
+    title: 'Sequestro de WhatsApp em Massa por Engenharia Social de Falso Anúncio de Venda',
+    date: '2026-01-08',
     country: 'Brasil',
-    category: 'PHISHING',
+    category: 'ACCOUNT TAKEOVER',
     impactLevel: 'MODERATE',
-    status: 'ARCHIVED',
-    summary: 'Disparo de 250.000 mensagens de SMS contendo link para página falsa idêntica ao internet banking de grande instituição financeira com captura em tempo real de senha de 6 e 8 dígitos e token.',
+    status: 'ANALYZED',
+    summary: 'Quadrilha utilizava falsas verificações de segurança em portais de anúncios classificados para induzir vendedores a fornecer o código SMS de ativação de 6 dígitos do WhatsApp, clonando a conta em segundos.',
     timeline: [
       {
-        timestamp: '18:00',
-        event: 'Disparo Massivo via Rota Pirata',
-        details: 'Mensagens enviadas com texto: "Seu cartão final 4012 foi bloqueado preventivamente por suspeita de fraude. Desbloqueie agora: [link]"'
+        timestamp: 'Etapa 1',
+        event: 'Publicação do Anúncio',
+        details: 'A vítima anuncia um produto (sofá/veículo) em um portal de compras e vendas.'
       },
       {
-        timestamp: '18:15',
-        event: 'Captura em Tempo Real (Man-in-the-Middle)',
-        details: 'A página espelho solicitava agência, conta, senha eletrônica e em seguida pedia o código do aplicativo token.'
+        timestamp: 'Etapa 2',
+        event: 'Contato do Falso Suporte',
+        details: 'Criminoso liga afirmando ser do "setor de segurança do portal" e diz que precisa validar o anúncio para evitar fraudes.'
       },
       {
-        timestamp: '19:00',
-        event: 'Takedown do Servidor',
-        details: 'Notificação do time de resposta a incidentes (CSIRT) para o provedor de hospedagem derrubando o domínio malicioso em menos de 3 horas.'
+        timestamp: 'Etapa 3',
+        event: 'Captura do Código SMS',
+        details: 'O golpista dispara o pedido de ativação do WhatsApp do número da vítima e pede que ela leia o código de 6 dígitos recebido.'
+      },
+      {
+        timestamp: 'Etapa 4',
+        event: 'Extorsão da Rede de Contatos',
+        details: 'Conta ativada no aparelho do fraudador, que envia mensagens para toda a agenda pedindo empréstimos Pix urgentes.'
       }
     ],
     attackAnatomy: {
-      initialContact: 'SMS com tom emergencial de segurança bancária.',
-      manipulationTechnique: 'Exploração do medo de ter a conta bloqueada ou de sofrer um prejuízo não autorizado.',
-      exploitationStep: 'Servidor intermediário conectado via API reversa para consumir o token da vítima em segundos.',
-      damageVector: 'Tentativas automatizadas de emissão de boletos e Pix antes do encerramento da sessão.'
+      initialContact: 'Chamada telefônica fingindo ser suporte técnico oficial de marketplace conhecido.',
+      manipulationTechnique: 'Ameaça de suspensão do anúncio caso o código de verificação não fosse confirmado imediatamente.',
+      exploitationStep: 'Uso do código de 6 dígitos oficial do WhatsApp para transferir a sessão para o celular do criminoso.',
+      damageVector: 'Prejuízo financeiro a amigos e familiares da vítima e quebra de privacidade de conversas íntimas.'
     },
     defensesLearned: [
-      'Bancos nunca enviam links diretos para desbloqueio ou digitação de senhas em SMS.',
-      'O uso de autenticação resistente a phishing (Passkeys / FIDO2) impede o repasse de credenciais para páginas falsas.',
-      'Sempre checar a URL na barra de endereços do navegador antes de digitar dados sensíveis.'
+      'NUNCA compartilhe códigos numéricos recebidos por SMS com ninguém, em hipótese alguma.',
+      'Ative obrigatoriamente a "Confirmação em Duas Etapas" com PIN secreto e e-mail no aplicativo do WhatsApp.',
+      'Plataformas de anúncios nunca ligam solicitando códigos SMS para validar publicações.'
     ],
     sources: [
-      { title: 'Relatório Técnico de Resposta a Incidentes Bancários', sourceType: 'SECURITY_BULLETIN' }
+      {
+        organization: 'CERT.br / NIC.br',
+        title: 'Fascículo: Como Proteger suas Contas em Mensageiros Instantâneos',
+        url: 'https://cartilha.cert.br',
+        type: 'SECURITY_RESEARCH',
+        isOfficial: true
+      },
+      {
+        organization: 'Polícia Civil / DIRD',
+        title: 'Alerta sobre Golpes de Clonagem e Sequestro de Sessão do WhatsApp',
+        url: 'https://policiacivil.sp.gov.br',
+        type: 'LAW_ENFORCEMENT',
+        isOfficial: true
+      }
     ]
   }
 ];

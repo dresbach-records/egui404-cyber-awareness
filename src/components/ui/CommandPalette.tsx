@@ -108,11 +108,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
         {/* Popular Category Chips */}
         <div className="px-4 py-2 bg-[#080808] border-b border-[#181818] flex items-center gap-2 overflow-x-auto text-xs">
           <span className="text-neutral-500 text-[11px] shrink-0">Populares:</span>
-          {['Pix', 'WhatsApp', 'Investimento', 'Phishing', 'MFA', 'Correios'].map((tag) => (
+          {['RNP/CAIS', 'Pix', 'WhatsApp', 'Investimento', 'Phishing', 'MFA', 'Correios'].map((tag) => (
             <button
               key={tag}
               onClick={() => setQuery(tag)}
-              className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-[#E00000] text-[11px] shrink-0"
+              className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:border-[#E00000] text-[11px] shrink-0 cursor-pointer"
             >
               {tag}
             </button>

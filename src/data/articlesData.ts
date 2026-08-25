@@ -43,8 +43,8 @@ Mais de 80% das violações de contas ocorrem devido a senhas fracas, reutilizad
       'Cadastrar uma Passkey no Google, Apple ou Microsoft'
     ],
     sources: [
-      { title: 'NIST Special Publication 800-63B: Digital Identity Guidelines', sourceType: 'SECURITY_BULLETIN' },
-      { title: 'CISA - Multi-Factor Authentication Guidance', sourceType: 'OFFICIAL_ALERT' }
+      { organization: 'NIST', title: 'NIST Special Publication 800-63B: Digital Identity Guidelines', sourceType: 'SECURITY_BULLETIN' },
+      { organization: 'CISA', title: 'CISA - Multi-Factor Authentication Guidance', sourceType: 'OFFICIAL_ALERT' }
     ]
   },
   {
@@ -87,7 +87,7 @@ Phishing é a arte do disfarce digital. O criminoso não invade seu sistema atra
       'Denunciar e-mails de phishing para os filtros do provedor'
     ],
     sources: [
-      { title: 'Anti-Phishing Working Group (APWG) Trends Report', sourceType: 'RESEARCH_REPORT' }
+      { organization: 'APWG', title: 'Anti-Phishing Working Group (APWG) Trends Report', sourceType: 'RESEARCH_REPORT' }
     ]
   },
   {
@@ -125,7 +125,7 @@ Kevin Mitnick celebremente afirmou que o elo mais fraco da segurança da informa
       'Consultar pessoas de confiança antes de decisões financeiras atípicas'
     ],
     sources: [
-      { title: 'Social Engineering: The Science of Human Hacking', sourceType: 'RESEARCH_REPORT' }
+      { organization: 'Social Engineering Research', title: 'Social Engineering: The Science of Human Hacking', sourceType: 'RESEARCH_REPORT' }
     ]
   },
   {
@@ -160,7 +160,7 @@ Hoje, um smartphone desbloqueado dá acesso a anos de economias, histórico de c
       'Anotar o número IMEI do aparelho em papel guardado em casa'
     ],
     sources: [
-      { title: 'Cartilha de Segurança do Banco Central e FEBRABAN', sourceType: 'OFFICIAL_ALERT' }
+      { organization: 'Banco Central do Brasil & FEBRABAN', title: 'Cartilha de Segurança do Banco Central e FEBRABAN', sourceType: 'OFFICIAL_ALERT' }
     ]
   }
 ];
