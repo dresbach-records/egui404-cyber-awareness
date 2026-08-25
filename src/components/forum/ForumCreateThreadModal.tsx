@@ -10,7 +10,7 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 import { ForumCategory, ForumTag } from '../../types';
-import { ForumService, ContentSafetyService } from '../../services/dataService';
+import { ContentSafetyService } from '../../services/dataService';
 import { forumApi } from '../../services/api/forumApi';
 import { SoundEngine } from '../../services/audioService';
 
@@ -88,23 +88,7 @@ export const ForumCreateThreadModal: React.FC<ForumCreateThreadModalProps> = ({
     setErrorMsg(null);
 
     try {
-      let createdSlug: string | null = null;
-      try {
-        const res = await forumApi.createThread({
-          title,
-          categoryId,
-          content,
-          sourceUrl: sourceUrl || undefined,
-          tags: selectedTags
-        });
-        if (res && res.slug) {
-          createdSlug = res.slug;
-        }
-      } catch {
-        // Fallback local service
-      }
-
-      const result = ForumService.createThread({
+      const createdThread = await forumApi.createThread({
         title,
         categoryId,
         content,
@@ -112,16 +96,11 @@ export const ForumCreateThreadModal: React.FC<ForumCreateThreadModalProps> = ({
         tags: selectedTags
       });
 
-      if (!createdSlug && result.success && result.thread) {
-        createdSlug = result.thread.slug;
+      if (!createdThread.slug) {
+        throw new Error('A API não retornou o identificador do tópico.');
       }
-
-      if (createdSlug) {
-        SoundEngine.playSuccessSound();
-        onSuccess(createdSlug);
-      } else {
-        setErrorMsg(result.error || 'Erro ao criar discussão.');
-      }
+      SoundEngine.playSuccessSound();
+      onSuccess(createdThread.slug);
     } catch (err: any) {
       setErrorMsg(err?.message || 'Erro ao processar postagem.');
     } finally {

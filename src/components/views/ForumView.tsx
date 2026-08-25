@@ -27,6 +27,7 @@ import {
   ForumThread,
   ForumTag,
   ForumMember,
+  ForumPost,
   ForumNotification
 } from '../../types';
 import { ForumService } from '../../services/dataService';
@@ -81,25 +82,17 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [tags, setTags] = useState<ForumTag[]>([]);
   const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [activeThreadPosts, setActiveThreadPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentMember, setCurrentMember] = useState<ForumMember>(ForumService.getMembers()[0]);
 
-  // Fetch from real API backend with fallback
+  // Dados operacionais do fórum vêm exclusivamente da API oficial.
   const fetchForumData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch categories
-      let cats: ForumCategory[] = [];
-      try {
-        cats = await forumApi.getCategories(signal);
-      } catch {
-        cats = ForumService.getCategories();
-      }
-      if (!cats || cats.length === 0) {
-        cats = ForumService.getCategories();
-      }
+      const cats = await forumApi.getCategories(signal);
       setCategories(cats);
 
       // Tags permanecem parte da configuração editorial do fórum; notificações vêm da API.
@@ -111,37 +104,16 @@ export const ForumView: React.FC<ForumViewProps> = ({
       const sortParam = activeTab === 'POPULAR' ? 'popular' : activeTab === 'UNSOLVED' ? 'unanswered' : 'recent';
       const categorySlugParam = activeCategorySlug !== 'ALL' ? activeCategorySlug : undefined;
 
-      let fetchedThreads: ForumThread[] = [];
-      try {
-        const res = await forumApi.getThreads(
-          {
-            categorySlug: categorySlugParam,
-            tag: selectedTag || undefined,
-            search: searchQuery.trim() || undefined,
-            sort: sortParam
-          },
-          signal
-        );
-        fetchedThreads = res.data || [];
-      } catch {
-        const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
-        fetchedThreads = ForumService.getThreads({
+      const res = await forumApi.getThreads(
+        {
           categorySlug: categorySlugParam,
           tag: selectedTag || undefined,
-          search: searchQuery || undefined,
-          sortBy
-        });
-      }
-
-      if (!fetchedThreads || fetchedThreads.length === 0) {
-        const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
-        fetchedThreads = ForumService.getThreads({
-          categorySlug: categorySlugParam,
-          tag: selectedTag || undefined,
-          search: searchQuery || undefined,
-          sortBy
-        });
-      }
+          search: searchQuery.trim() || undefined,
+          sort: sortParam
+        },
+        signal
+      );
+      let fetchedThreads = res.data || [];
 
       if (activeTab === 'BOOKMARKS') {
         fetchedThreads = fetchedThreads.filter((t) => t.isBookmarkedByMe);
@@ -178,12 +150,23 @@ export const ForumView: React.FC<ForumViewProps> = ({
   // Active Thread Data for Detail View
   const activeThread = useMemo(() => {
     if (!activeThreadSlug) return null;
-    return threads.find((t) => t.slug === activeThreadSlug) || ForumService.getThreadBySlug(activeThreadSlug);
+    return threads.find((t) => t.slug === activeThreadSlug) || null;
   }, [activeThreadSlug, threads]);
 
-  const activeThreadPosts = useMemo(() => {
-    if (!activeThread) return [];
-    return ForumService.getPosts(activeThread.id);
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!activeThread) {
+      setActiveThreadPosts([]);
+      return () => controller.abort();
+    }
+    forumApi.getPosts(activeThread.id, undefined, controller.signal)
+      .then((response) => setActiveThreadPosts(response.data))
+      .catch((requestError) => {
+        if (requestError instanceof Error && requestError.name !== 'AbortError') {
+          setError('Não foi possível carregar as respostas deste tópico.');
+        }
+      });
+    return () => controller.abort();
   }, [activeThread]);
 
   const handleOpenThread = (slug: string) => {
@@ -201,9 +184,10 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const handleBookmarkToggle = async (threadId: string) => {
     try {
       await forumApi.toggleBookmark(threadId);
-    } catch {}
-    ForumService.toggleBookmarkThread(threadId);
-    fetchForumData();
+      fetchForumData();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível salvar o tópico.');
+    }
   };
 
   const handleTagFilter = (tag: string) => {
