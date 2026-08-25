@@ -236,7 +236,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
   }
 
   if (!currentUser) {
-    return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center space-y-4"><ShieldCheck className="mx-auto h-10 w-10 text-[#E00000]" /><h1 className="text-xl font-mono text-white">Fórum privado</h1><p className="text-sm text-neutral-400">Faça login para acessar discussões, posts, perfis e notificações.</p><button type="button" onClick={() => onNavigate('/admin')} className="text-sm text-[#E00000] underline">Acessar autenticação</button></div>;
+    return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center space-y-4"><ShieldCheck className="mx-auto h-10 w-10 text-[#E00000]" /><h1 className="text-xl font-mono text-white">Fórum privado</h1><p className="text-sm text-neutral-400">Faça login para acessar discussões, posts, perfis e notificações.</p><div className="flex flex-wrap justify-center gap-3"><button type="button" onClick={() => onNavigate('/auth/login')} className="rounded-md bg-[#E00000] px-4 py-2 text-sm font-semibold text-white">Entrar</button><button type="button" onClick={() => onNavigate('/auth/register')} className="rounded-md border border-[#333] px-4 py-2 text-sm text-neutral-200">Criar conta</button></div></div>;
   }
 
   return (

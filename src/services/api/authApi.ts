@@ -16,6 +16,13 @@ function unwrapData(value: unknown): unknown {
 }
 
 export const authApi = {
+  register: async (input: { name: string; email: string; password: string }): Promise<{ user: AuthSessionUser }> => {
+    const res = await apiClient.post<unknown>('/auth/sign-up/email', input);
+    const data = unwrapData(res);
+    const user = isRecord(data) && isRecord(data.user) ? data.user : data;
+    return { user: user as AuthSessionUser };
+  },
+
   login: async (credentials: LoginCredentials): Promise<{ user: AuthSessionUser }> => {
     const identifier = credentials.email || credentials.username;
     if (!identifier || !credentials.password) {
