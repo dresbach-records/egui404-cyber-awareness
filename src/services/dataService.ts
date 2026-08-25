@@ -46,15 +46,26 @@ const FORUM_POSTS_STORAGE_KEY = 'egui404_forum_posts';
 const FORUM_NOTIFS_STORAGE_KEY = 'egui404_forum_notifs';
 const FORUM_MOD_STORAGE_KEY = 'egui404_forum_mod_reports';
 const FORUM_BOOKMARKS_STORAGE_KEY = 'egui404_forum_bookmarks';
+const CUSTOM_SCAMS_STORAGE_KEY = 'egui404_custom_scams';
+const CUSTOM_THREATS_STORAGE_KEY = 'egui404_custom_threats';
+const CUSTOM_CASES_STORAGE_KEY = 'egui404_custom_cases';
+const CUSTOM_ARTICLES_STORAGE_KEY = 'egui404_custom_articles';
+const CUSTOM_ALERTS_STORAGE_KEY = 'egui404_custom_alerts';
 
 export const ScamService = {
   getAllScams: (): ScamItem[] => {
+    let custom: ScamItem[] = [];
+    try {
+      const stored = localStorage.getItem(CUSTOM_SCAMS_STORAGE_KEY);
+      if (stored) custom = JSON.parse(stored);
+    } catch {}
+
     const rnpScams = RnpRepository.getAllScams();
     const seenIds = new Set<string>();
     const combined: ScamItem[] = [];
 
-    // Prioritize RNP catalog entries then internal datasets
-    [...rnpScams, ...SCAMS_DATA].forEach((item) => {
+    // Custom/edited first, then RNP, then static seed data
+    [...custom, ...rnpScams, ...SCAMS_DATA].forEach((item) => {
       if (!seenIds.has(item.id) && !seenIds.has(item.slug)) {
         seenIds.add(item.id);
         seenIds.add(item.slug);
@@ -63,6 +74,24 @@ export const ScamService = {
     });
 
     return combined;
+  },
+  saveScam: (scam: ScamItem) => {
+    try {
+      let list = ScamService.getAllScams();
+      const idx = list.findIndex((s) => s.id === scam.id || s.slug === scam.slug);
+      if (idx >= 0) {
+        list[idx] = scam;
+      } else {
+        list.unshift(scam);
+      }
+      localStorage.setItem(CUSTOM_SCAMS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
+  },
+  deleteScam: (id: string) => {
+    try {
+      let list = ScamService.getAllScams().filter((s) => s.id !== id && s.slug !== id);
+      localStorage.setItem(CUSTOM_SCAMS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
   },
   getScamBySlug: (slug: string): ScamItem | undefined => {
     const all = ScamService.getAllScams();
@@ -146,41 +175,161 @@ export const ScamService = {
 
 export const ThreatService = {
   getAllThreats: (): ThreatItem[] => {
+    try {
+      const stored = localStorage.getItem(CUSTOM_THREATS_STORAGE_KEY);
+      if (stored) {
+        const custom: ThreatItem[] = JSON.parse(stored);
+        const seen = new Set<string>();
+        const res: ThreatItem[] = [];
+        [...custom, ...THREATS_DATA].forEach((t) => {
+          if (!seen.has(t.id)) {
+            seen.add(t.id);
+            res.push(t);
+          }
+        });
+        return res;
+      }
+    } catch {}
     return THREATS_DATA;
   },
   getThreatById: (id: string): ThreatItem | undefined => {
-    return THREATS_DATA.find((t) => t.id === id || t.slug === id || t.threatCode.toLowerCase() === id.toLowerCase());
+    return ThreatService.getAllThreats().find(
+      (t) => t.id === id || t.slug === id || t.threatCode.toLowerCase() === id.toLowerCase()
+    );
+  },
+  saveThreat: (threat: ThreatItem) => {
+    try {
+      let list = ThreatService.getAllThreats();
+      const idx = list.findIndex((t) => t.id === threat.id);
+      if (idx >= 0) {
+        list[idx] = threat;
+      } else {
+        list.unshift(threat);
+      }
+      localStorage.setItem(CUSTOM_THREATS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
+  },
+  deleteThreat: (id: string) => {
+    try {
+      let list = ThreatService.getAllThreats().filter((t) => t.id !== id);
+      localStorage.setItem(CUSTOM_THREATS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
   }
 };
 
 export const CaseService = {
   getAllCases: (): CaseFile[] => {
+    try {
+      const stored = localStorage.getItem(CUSTOM_CASES_STORAGE_KEY);
+      if (stored) {
+        const custom: CaseFile[] = JSON.parse(stored);
+        const seen = new Set<string>();
+        const res: CaseFile[] = [];
+        [...custom, ...CASES_DATA].forEach((c) => {
+          if (!seen.has(c.id)) {
+            seen.add(c.id);
+            res.push(c);
+          }
+        });
+        return res;
+      }
+    } catch {}
     return CASES_DATA;
   },
   getCaseById: (id: string): CaseFile | undefined => {
-    return CASES_DATA.find((c) => c.id === id || c.caseNumber.toLowerCase().includes(id.toLowerCase()));
+    return CaseService.getAllCases().find(
+      (c) => c.id === id || c.caseNumber.toLowerCase().includes(id.toLowerCase())
+    );
+  },
+  saveCase: (caseItem: CaseFile) => {
+    try {
+      let list = CaseService.getAllCases();
+      const idx = list.findIndex((c) => c.id === caseItem.id);
+      if (idx >= 0) {
+        list[idx] = caseItem;
+      } else {
+        list.unshift(caseItem);
+      }
+      localStorage.setItem(CUSTOM_CASES_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
+  },
+  deleteCase: (id: string) => {
+    try {
+      let list = CaseService.getAllCases().filter((c) => c.id !== id);
+      localStorage.setItem(CUSTOM_CASES_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
   }
 };
 
 export const ArticleService = {
   getAllArticles: (): EducationArticle[] => {
+    try {
+      const stored = localStorage.getItem(CUSTOM_ARTICLES_STORAGE_KEY);
+      if (stored) {
+        const custom: EducationArticle[] = JSON.parse(stored);
+        const seen = new Set<string>();
+        const res: EducationArticle[] = [];
+        [...custom, ...ARTICLES_DATA].forEach((a) => {
+          if (!seen.has(a.id) && !seen.has(a.slug)) {
+            seen.add(a.id);
+            seen.add(a.slug);
+            res.push(a);
+          }
+        });
+        return res;
+      }
+    } catch {}
     return ARTICLES_DATA;
   },
   getArticleBySlug: (slug: string): EducationArticle | undefined => {
-    return ARTICLES_DATA.find((a) => a.slug === slug || a.id === slug);
+    return ArticleService.getAllArticles().find((a) => a.slug === slug || a.id === slug);
+  },
+  saveArticle: (article: EducationArticle) => {
+    try {
+      let list = ArticleService.getAllArticles();
+      const idx = list.findIndex((a) => a.id === article.id || a.slug === article.slug);
+      if (idx >= 0) {
+        list[idx] = article;
+      } else {
+        list.unshift(article);
+      }
+      localStorage.setItem(CUSTOM_ARTICLES_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
+  },
+  deleteArticle: (id: string) => {
+    try {
+      let list = ArticleService.getAllArticles().filter((a) => a.id !== id && a.slug !== id);
+      localStorage.setItem(CUSTOM_ARTICLES_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
   }
 };
 
 export const AlertService = {
   getAllAlerts: (): ScamAlert[] => {
+    try {
+      const stored = localStorage.getItem(CUSTOM_ALERTS_STORAGE_KEY);
+      if (stored) {
+        const custom: ScamAlert[] = JSON.parse(stored);
+        const seen = new Set<string>();
+        const res: ScamAlert[] = [];
+        [...custom, ...ALERTS_DATA].forEach((a) => {
+          if (!seen.has(a.id)) {
+            seen.add(a.id);
+            res.push(a);
+          }
+        });
+        return res;
+      }
+    } catch {}
     return ALERTS_DATA;
   },
   getActiveAlerts: (): ScamAlert[] => {
-    return ALERTS_DATA.filter((a) => a.status === 'ACTIVE');
+    return AlertService.getAllAlerts().filter((a) => a.status === 'ACTIVE');
   },
   createAlert: (alert: Omit<ScamAlert, 'id' | 'alertNumber' | 'status' | 'date'>): ScamAlert => {
+    const list = AlertService.getAllAlerts();
     const newId = `alert-${Date.now()}`;
-    const nextNum = `#${String(ALERTS_DATA.length + 1).padStart(4, '0')}`;
+    const nextNum = `#${String(list.length + 1).padStart(4, '0')}`;
     const newAlert: ScamAlert = {
       ...alert,
       id: newId,
@@ -188,8 +337,24 @@ export const AlertService = {
       status: 'ACTIVE',
       date: new Date().toISOString().split('T')[0]
     };
-    ALERTS_DATA.unshift(newAlert);
+    list.unshift(newAlert);
+    try {
+      localStorage.setItem(CUSTOM_ALERTS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
     return newAlert;
+  },
+  updateAlert: (id: string, updates: Partial<ScamAlert>) => {
+    let list = AlertService.getAllAlerts();
+    list = list.map((a) => (a.id === id ? { ...a, ...updates } : a));
+    try {
+      localStorage.setItem(CUSTOM_ALERTS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
+  },
+  deleteAlert: (id: string) => {
+    let list = AlertService.getAllAlerts().filter((a) => a.id !== id);
+    try {
+      localStorage.setItem(CUSTOM_ALERTS_STORAGE_KEY, JSON.stringify(list));
+    } catch {}
   }
 };
 
@@ -424,11 +589,18 @@ export const ReportService = {
       }
     ];
   },
-  updateReportStatus: (id: string, newStatus: 'APPROVED' | 'REJECTED' | 'ARCHIVED' | 'ANALYZED') => {
+  getPendingReports: (): ReportSubmission[] => {
+    return ReportService.getAllReports().filter(
+      (r) => r.status === 'PENDING' || r.status === 'PENDING_TRIAGE'
+    );
+  },
+  updateReportStatus: (idOrTicket: string, newStatus: 'PENDING' | 'PENDING_TRIAGE' | 'APPROVED' | 'REJECTED' | 'ARCHIVED' | 'ANALYZED') => {
     try {
       const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
       let list = stored ? JSON.parse(stored) : ReportService.getAllReports();
-      list = list.map((item: any) => (item.id === id ? { ...item, status: newStatus } : item));
+      list = list.map((item: any) =>
+        item.id === idOrTicket || item.ticketId === idOrTicket ? { ...item, status: newStatus } : item
+      );
       localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(list));
     } catch {}
   }

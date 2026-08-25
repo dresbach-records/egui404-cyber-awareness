@@ -466,3 +466,119 @@ export interface ContentAnalysis {
   detectedPatterns: string[];
   recommendation: string;
 }
+
+/* ==========================================================================
+   ADMIN & CONTROL CENTER TYPES
+   ========================================================================== */
+
+export type AuditAction =
+  | 'LOGIN'
+  | 'LOGIN_FAILURE'
+  | 'CREATE'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'PUBLISH'
+  | 'ARCHIVE'
+  | 'MODERATION'
+  | 'IMPORT'
+  | 'INTEGRATION_SYNC'
+  | 'SOURCE_UPDATE'
+  | 'ROLE_CHANGE'
+  | 'SYSTEM_CHANGE'
+  | 'SYSTEM_PURGE'
+  | 'CLEAR_LOGS';
+
+export interface AuditLogItem {
+  id: string;
+  timestamp: string;
+  user: string;
+  action: AuditAction;
+  entity: string;
+  entityId: string;
+  ip: string;
+  result: 'SUCCESS' | 'WARNING' | 'DENIED' | 'FAILED' | 'FAILURE';
+  details?: string;
+}
+
+export interface AdminMemberItem {
+  id: string;
+  name: string;
+  email: string;
+  role: 'SUPER_ADMIN' | 'ADMIN' | 'ANALYST' | 'MODERATOR' | 'RESEARCHER';
+  status: 'ACTIVE' | 'SUSPENDED' | 'INACTIVE';
+  mfaEnabled: boolean;
+  lastLogin: string;
+}
+
+export interface AdminSourceItem {
+  id: string;
+  name: string;
+  organization: string;
+  type: string;
+  url: string;
+  status: 'ACTIVE' | 'MONITORED' | 'DEGRADED' | 'INACTIVE';
+  lastChecked: string;
+  notes: string;
+  recordsCount: number;
+  isOfficial: boolean;
+}
+
+export interface SystemSettings {
+  general: {
+    siteName: string;
+    tagline: string;
+    contactEmail: string;
+    maintenanceMode: boolean;
+    publicRegistration: boolean;
+  };
+  brand: {
+    primaryColor: string;
+    accentColor: string;
+    observerSignature: string;
+  };
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+    ogImageUrl: string;
+    robotsAllow: boolean;
+  };
+  pwa: {
+    appName: string;
+    shortName: string;
+    themeColor: string;
+    offlineModeBanner: boolean;
+    cacheStrategy: string;
+  };
+  moderation: {
+    autoModerateFlags: boolean;
+    strictLgpdMasking: boolean;
+    requireReviewForNewMembers: boolean;
+    escalationThreshold: number;
+  };
+  security: {
+    rateLimitingEnabled: boolean;
+    requireMfaForAdmins: boolean;
+    sessionTimeoutMinutes: number;
+    defensiveDefangUrls: boolean;
+  };
+}
+
+export interface AdminNotification {
+  id: string;
+  type: 'REPORT' | 'MODERATION' | 'IMPORT' | 'THREAT' | 'SYSTEM' | 'SOURCE';
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+  link?: string;
+}
+
+export interface SearchAnalyticsItem {
+  query: string;
+  count: number;
+  zeroResults: boolean;
+  category?: string;
+  lastSearched: string;
+}
+

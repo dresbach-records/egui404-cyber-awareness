@@ -2,5 +2,7 @@
   "name": "E GUI 404 — Cyber Crime Awareness",
   "description": "Plataforma independente de Cyber Crime Awareness, Scam Intelligence e Digital Safety. Expose. Educate. Protect.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }
