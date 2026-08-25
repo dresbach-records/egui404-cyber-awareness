@@ -15,9 +15,15 @@ import {
   Sparkles,
   Lock,
   Cpu,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
-import { ScamService, ThreatService, CaseService, AlertService, StatsService } from '../../services/dataService';
+import { scamsApi } from '../../services/api/scamsApi';
+import { threatsApi } from '../../services/api/threatsApi';
+import { casesApi } from '../../services/api/casesApi';
+import { alertsApi } from '../../services/api/alertsApi';
+import { analyticsApi } from '../../services/api/analyticsApi';
+import { ScamItem, ThreatItem, CaseFile, ScamAlert } from '../../types';
 import { RiskBadge } from '../ui/RiskBadge';
 import { StatusBadge } from '../ui/StatusBadge';
 import { CyberCard } from '../ui/CyberCard';
@@ -33,12 +39,73 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, language }) => {
   const [booting, setBooting] = useState(true);
   const [bootStep, setBootStep] = useState(0);
 
-  const stats = StatsService.getStats();
-  const alerts = AlertService.getActiveAlerts();
-  const latestAlert = alerts[0];
-  const featuredScams = ScamService.getAllScams().slice(0, 4);
-  const featuredThreats = ThreatService.getAllThreats().slice(0, 3);
-  const featuredCases = CaseService.getAllCases().slice(0, 2);
+  const [loading, setLoading] = useState(true);
+  const [featuredScams, setFeaturedScams] = useState<ScamItem[]>([]);
+  const [featuredThreats, setFeaturedThreats] = useState<ThreatItem[]>([]);
+  const [featuredCases, setFeaturedCases] = useState<CaseFile[]>([]);
+  const [latestAlert, setLatestAlert] = useState<ScamAlert | null>(null);
+  const [stats, setStats] = useState<{
+    threatsDocumented: number;
+    casesAnalyzed: number;
+    scamCategories: number;
+    safetyGuides: number;
+    alertsBroadcasted: number;
+    scenariosTested: number;
+  }>({
+    threatsDocumented: 0,
+    casesAnalyzed: 0,
+    scamCategories: 18,
+    safetyGuides: 0,
+    alertsBroadcasted: 0,
+    scenariosTested: 12
+  });
+
+  const loadData = async (signal?: AbortSignal) => {
+    setLoading(true);
+    try {
+      const [scamsRes, threatsRes, casesRes, alertsRes, dashboardRes] = await Promise.allSettled([
+        scamsApi.getScams({ limit: 4 }, signal),
+        threatsApi.getThreats({ limit: 3 }, signal),
+        casesApi.getCases({ limit: 2 }, signal),
+        alertsApi.getAlerts({ limit: 1 }, signal),
+        analyticsApi.getDashboard(signal)
+      ]);
+
+      if (scamsRes.status === 'fulfilled') {
+        setFeaturedScams(scamsRes.value.data || []);
+      }
+      if (threatsRes.status === 'fulfilled') {
+        setFeaturedThreats(threatsRes.value.data || []);
+      }
+      if (casesRes.status === 'fulfilled') {
+        setFeaturedCases(casesRes.value.data || []);
+      }
+      if (alertsRes.status === 'fulfilled' && alertsRes.value.data.length > 0) {
+        setLatestAlert(alertsRes.value.data[0]);
+      }
+      if (dashboardRes.status === 'fulfilled' && dashboardRes.value) {
+        const d = dashboardRes.value;
+        setStats({
+          threatsDocumented: d.totalScams || (scamsRes.status === 'fulfilled' ? scamsRes.value.data.length : 0),
+          casesAnalyzed: d.totalCases || (casesRes.status === 'fulfilled' ? casesRes.value.data.length : 0),
+          scamCategories: 18,
+          safetyGuides: d.totalArticles || 10,
+          alertsBroadcasted: d.activeAlerts || (alertsRes.status === 'fulfilled' ? alertsRes.value.data.length : 0),
+          scenariosTested: 12
+        });
+      }
+    } catch {
+      // Handled cleanly with empty/fallback states
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadData(controller.signal);
+    return () => controller.abort();
+  }, []);
 
   // Cinematic Boot Sequence
   const bootMessages = [

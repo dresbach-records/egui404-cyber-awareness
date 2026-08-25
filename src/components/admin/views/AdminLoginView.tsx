@@ -9,10 +9,12 @@ import {
   AlertTriangle,
   CheckCircle,
   Terminal,
-  Shield
+  Shield,
+  Loader2
 } from 'lucide-react';
 import { SoundEngine } from '../../../services/audioService';
 import { AuditLogService } from '../../../services/adminService';
+import { authApi } from '../../../services/api/authApi';
 
 interface AdminLoginViewProps {
   onLoginSuccess: (user: { name: string; role: string }) => void;
@@ -25,14 +27,31 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
   const [isLoading, setIsLoading] = useState(false);
   const [usePasskey, setUsePasskey] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
     SoundEngine.playKeyClick();
 
-    setTimeout(() => {
-      // Demo validation
+    try {
+      // Try real backend authentication
+      const result = await authApi.login({ username, password });
+      SoundEngine.playSuccessSound();
+      AuditLogService.log({
+        user: result.user.name || result.user.email || username,
+        action: 'LOGIN',
+        entity: 'AUTH_CLEARANCE',
+        entityId: result.user.id || username,
+        ip: '127.0.0.1',
+        result: 'SUCCESS',
+        details: 'Autenticação administrativa com credenciais autorizadas via Better Auth.'
+      });
+      onLoginSuccess({
+        name: result.user.name || (username === 'admin' ? 'Comandante de Operações' : 'Analista Tático'),
+        role: result.user.role || (username === 'admin' ? 'SUPER_ADMIN' : 'ANALYST')
+      });
+    } catch (err: any) {
+      // Fallback for default demo accounts if backend unreachable or credentials match demo
       if ((username === 'admin' && password === 'egui404admin') || username === 'analyst') {
         SoundEngine.playSuccessSound();
         AuditLogService.log({
@@ -42,7 +61,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
           entityId: username,
           ip: '127.0.0.1',
           result: 'SUCCESS',
-          details: 'Autenticação administrativa com credenciais autorizadas.'
+          details: 'Autenticação administrativa com credenciais locais autorizadas.'
         });
         onLoginSuccess({
           name: username === 'admin' ? 'Comandante de Operações' : 'Analista Tático',
@@ -50,7 +69,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
         });
       } else {
         SoundEngine.playAlertSound();
-        setError('Credenciais inválidas. Acesso restrito a operadores autorizados.');
+        setError(err.message || 'Credenciais inválidas. Acesso restrito a operadores autorizados.');
         AuditLogService.log({
           user: username || 'unknown',
           action: 'LOGIN_FAILURE',
@@ -61,13 +80,26 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
           details: 'Tentativa de login com credenciais incorretas.'
         });
       }
+    } finally {
       setIsLoading(false);
-    }, 600);
+    }
   };
 
-  const handlePasskeyAuth = () => {
+  const handlePasskeyAuth = async () => {
     SoundEngine.playKeyClick();
     setIsLoading(true);
+    try {
+      const session = await authApi.getSession();
+      if (session) {
+        SoundEngine.playSuccessSound();
+        onLoginSuccess({
+          name: session.name || 'Comandante de Operações',
+          role: session.role || 'SUPER_ADMIN'
+        });
+        return;
+      }
+    } catch {}
+
     setTimeout(() => {
       SoundEngine.playSuccessSound();
       AuditLogService.log({
@@ -84,7 +116,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
         role: 'SUPER_ADMIN'
       });
       setIsLoading(false);
-    }, 800);
+    }, 600);
   };
 
   return (
@@ -110,7 +142,7 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
         <div className="p-3.5 rounded-xl bg-[#141414] border border-[#222222] text-[11px] font-mono space-y-1">
           <div className="text-[#AAAAAA] font-bold flex items-center gap-1.5">
             <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Credenciais Pré-Configuradas (DEMO):</span>
+            <span>Credenciais Pré-Configuradas (DEMO / API):</span>
           </div>
           <div className="flex items-center justify-between text-[#888888]">
             <span>Usuário: <span className="text-white">admin</span></span>
@@ -165,8 +197,17 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
             disabled={isLoading}
             className="w-full py-3.5 rounded-xl bg-[#E00000] hover:bg-[#FF1A1A] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(224,0,0,0.4)] disabled:opacity-50 cursor-pointer"
           >
-            <span>{isLoading ? 'Autenticando...' : 'Acessar Centro de Comando'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Autenticando...</span>
+              </>
+            ) : (
+              <>
+                <span>Acessar Centro de Comando</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 

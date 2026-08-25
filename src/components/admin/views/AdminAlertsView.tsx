@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Bell,
   Radio,
@@ -12,17 +12,20 @@ import {
   Smartphone,
   Send,
   Zap,
-  Volume2
+  Volume2,
+  Loader2
 } from 'lucide-react';
 import { ScamAlert, RiskLevel, ThreatStatus } from '../../../types';
 import { AlertService } from '../../../services/dataService';
+import { alertsApi } from '../../../services/api/alertsApi';
 import { AuditLogService } from '../../../services/adminService';
 import { RiskBadge } from '../../ui/RiskBadge';
 import { StatusBadge } from '../../ui/StatusBadge';
 import { SoundEngine } from '../../../services/audioService';
 
 export const AdminAlertsView: React.FC = () => {
-  const [alerts, setAlerts] = useState<ScamAlert[]>(() => AlertService.getAllAlerts());
+  const [alerts, setAlerts] = useState<ScamAlert[]>([]);
+  const [loading, setLoading] = useState(true);
   const [broadcastFeedback, setBroadcastFeedback] = useState<string | null>(null);
 
   // Form State
@@ -35,27 +38,63 @@ export const AdminAlertsView: React.FC = () => {
     'Validar sempre através do aplicativo ou canal oficial da instituição bancária.'
   );
 
-  const handleBroadcast = (e: React.FormEvent) => {
+  const fetchAlerts = async (signal?: AbortSignal) => {
+    setLoading(true);
+    try {
+      const res = await alertsApi.getAlerts(undefined, signal);
+      setAlerts(res.data || []);
+    } catch {
+      setAlerts(AlertService.getAllAlerts());
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchAlerts(controller.signal);
+    return () => controller.abort();
+  }, []);
+
+  const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!headline || !warning) return;
 
     SoundEngine.playSuccessSound();
-    const newAlert = AlertService.createAlert({
+    const alertPayload: Partial<ScamAlert> = {
       type,
       headline,
       warning,
       risk,
       recommendedAction,
-      urgent
-    });
+      urgent,
+      status: 'ACTIVE',
+      timestamp: new Date().toISOString()
+    };
 
-    setAlerts(AlertService.getAllAlerts());
+    let newAlert: ScamAlert;
+    try {
+      newAlert = await alertsApi.createAlert(alertPayload);
+      setAlerts((prev) => [newAlert, ...prev]);
+    } catch {
+      newAlert = AlertService.createAlert({
+        type,
+        headline,
+        warning,
+        risk,
+        recommendedAction,
+        urgent
+      });
+      setAlerts(AlertService.getAllAlerts());
+    }
 
     AuditLogService.log({
       user: 'admin',
       action: 'PUBLISH',
       entity: 'SCAM_ALERT',
-      entityId: newAlert.alertNumber,
+      entityId: newAlert.alertNumber || newAlert.id,
       ip: '127.0.0.1',
       result: 'SUCCESS',
       details: `Transmitido alerta de emergência [${newAlert.alertNumber}]: ${newAlert.headline}`
@@ -67,11 +106,16 @@ export const AdminAlertsView: React.FC = () => {
     setTimeout(() => setBroadcastFeedback(null), 5000);
   };
 
-  const handleToggleStatus = (id: string, currentStatus: ThreatStatus) => {
+  const handleToggleStatus = async (id: string, currentStatus: ThreatStatus) => {
     const nextStatus: ThreatStatus = currentStatus === 'ACTIVE' ? 'RESOLVED' : 'ACTIVE';
     SoundEngine.playKeyClick();
+    try {
+      await alertsApi.updateAlert(id, { status: nextStatus });
+    } catch {}
+
     AlertService.updateAlert(id, { status: nextStatus });
-    setAlerts(AlertService.getAllAlerts());
+    setAlerts((prev) => prev.map((a) => (a.id === id ? { ...a, status: nextStatus } : a)));
+
     AuditLogService.log({
       user: 'admin',
       action: 'UPDATE',
@@ -83,10 +127,15 @@ export const AdminAlertsView: React.FC = () => {
     });
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     SoundEngine.playAlertSound();
+    try {
+      await alertsApi.deleteAlert(id);
+    } catch {}
+
     AlertService.deleteAlert(id);
-    setAlerts(AlertService.getAllAlerts());
+    setAlerts((prev) => prev.filter((a) => a.id !== id));
+
     AuditLogService.log({
       user: 'admin',
       action: 'DELETE',

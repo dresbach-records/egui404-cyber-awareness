@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Search,
   Filter,
@@ -19,9 +19,11 @@ import {
   MessageSquare,
   FileText,
   Radio,
-  Info
+  Info,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
-import { ScamService } from '../../services/dataService';
+import { scamsApi, ScamQueryParams } from '../../services/api/scamsApi';
 import { ScamItem, ScamCategory, RiskLevel, ThreatStatus, RNP_FRAUD_CATALOG_URL } from '../../types';
 import { RiskBadge } from '../ui/RiskBadge';
 import { StatusBadge } from '../ui/StatusBadge';
@@ -44,15 +46,13 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ initialSlug, onNavigat
   const [selectedStatus, setSelectedStatus] = useState<ThreatStatus | 'ALL'>('ALL');
   const [selectedSource, setSelectedSource] = useState<SourceFilterType>('ALL');
   const [sortBy, setSortBy] = useState<'DATE_DESC' | 'DATE_ASC' | 'RISK_HIGH' | 'TITLE'>('DATE_DESC');
-  const [activeScam, setActiveScam] = useState<ScamItem | null>(() => {
-    if (initialSlug) {
-      return ScamService.getScamBySlug(initialSlug) || null;
-    }
-    return null;
-  });
-  const [copiedLink, setCopiedLink] = useState(false);
 
-  const sourceCounts = useMemo(() => ScamService.getSourceCounts(), []);
+  const [scams, setScams] = useState<ScamItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeScam, setActiveScam] = useState<ScamItem | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const categories: (ScamCategory | 'ALL')[] = [
     'ALL',
@@ -73,16 +73,73 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ initialSlug, onNavigat
     'SOCIAL ENGINEERING'
   ];
 
-  const filteredScams = useMemo(() => {
-    return ScamService.filterScams({
-      category: selectedCategory,
-      risk: selectedRisk,
-      status: selectedStatus,
-      source: selectedSource,
-      search: searchQuery,
-      sortBy: sortBy
-    });
+  const fetchScams = async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params: ScamQueryParams = {
+        category: selectedCategory !== 'ALL' ? selectedCategory : undefined,
+        risk: selectedRisk !== 'ALL' ? selectedRisk : undefined,
+        status: selectedStatus !== 'ALL' ? selectedStatus : undefined,
+        sourceProvider: selectedSource !== 'ALL' ? selectedSource : undefined,
+        search: searchQuery.trim() || undefined,
+        sortBy: sortBy === 'TITLE' ? 'title' : sortBy === 'RISK_HIGH' ? 'risk' : 'date',
+        order: sortBy === 'DATE_ASC' ? 'asc' : 'desc'
+      };
+
+      const res = await scamsApi.getScams(params, signal);
+      setScams(res.data || []);
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        setError(err.message || 'Não foi possível carregar o arquivo de ameaças.');
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (initialSlug) {
+      scamsApi.getScamBySlug(initialSlug).then((s) => {
+        if (s) setActiveScam(s);
+      }).catch(() => {});
+    }
+  }, [initialSlug]);
+
+  useEffect(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const timer = setTimeout(() => {
+      fetchScams(controller.signal);
+    }, 150);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
   }, [selectedCategory, selectedRisk, selectedStatus, selectedSource, searchQuery, sortBy]);
+
+  const sourceCounts = useMemo(() => {
+    const rnp = scams.filter((s) => s.sourceProvider === 'RNP_CAIS' || s.originalRecordId?.startsWith('RNP_CAIS')).length;
+    const egui = scams.filter((s) => s.sourceProvider === 'EGUI_404' || (!s.sourceProvider && !s.originalRecordId)).length;
+    const community = scams.filter((s) => s.verificationStatus === 'COMMUNITY_REPORTED' || s.sourceProvider === 'COMMUNITY').length;
+    const official = scams.filter((s) => s.sources?.some((src) => src.isOfficial || src.organization?.includes('RNP'))).length;
+    return {
+      total: scams.length,
+      rnp,
+      egui,
+      community,
+      official
+    };
+  }, [scams]);
+
+  const filteredScams = scams;
 
   const handleOpenDetail = (scam: ScamItem) => {
     SoundEngine.playKeyClick();
@@ -322,11 +379,44 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ initialSlug, onNavigat
         />
       )}
 
-      {/* Scams Grid */}
-      {filteredScams.length === 0 ? (
+      {/* Scams Grid, Loading and Error States */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div
+              key={i}
+              className="p-5 rounded-lg bg-[#0C0C0C] border border-[#1F1F1F] animate-pulse space-y-4"
+            >
+              <div className="flex justify-between items-center">
+                <div className="w-20 h-4 bg-[#222222] rounded" />
+                <div className="w-16 h-4 bg-[#222222] rounded" />
+              </div>
+              <div className="w-3/4 h-5 bg-[#222222] rounded" />
+              <div className="space-y-2">
+                <div className="w-full h-3 bg-[#1A1A1A] rounded" />
+                <div className="w-5/6 h-3 bg-[#1A1A1A] rounded" />
+              </div>
+              <div className="w-full h-12 bg-[#171010] rounded" />
+            </div>
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-16 bg-[#140808] border border-[#3b1515] rounded-lg font-tech p-6 space-y-3">
+          <AlertTriangle className="w-10 h-10 mx-auto text-[#FF4D4D]" />
+          <h3 className="text-white text-lg font-bold">Falha ao consultar repositório de ameaças</h3>
+          <p className="text-neutral-400 text-xs max-w-md mx-auto">{error}</p>
+          <button
+            onClick={() => fetchScams()}
+            className="mt-4 px-4 py-2 bg-[#E00000] text-white rounded text-xs hover:bg-[#FF1A1A] font-bold flex items-center gap-2 mx-auto cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>Tentar Novamente</span>
+          </button>
+        </div>
+      ) : filteredScams.length === 0 ? (
         <div className="text-center py-16 bg-[#080808] border border-[#1a1a1a] rounded-lg font-tech">
           <ShieldAlert className="w-10 h-10 mx-auto text-[#FF1A1A] opacity-50 mb-3" />
-          <h3 className="text-white text-lg font-bold">Nenhum registro encontrado com estes filtros</h3>
+          <h3 className="text-white text-lg font-bold">Nenhum registro retornado pelo servidor com estes filtros</h3>
           <p className="text-neutral-400 text-xs mt-1">Tente remover filtros ou usar termos mais amplos de busca.</p>
           <button
             onClick={() => {
@@ -336,7 +426,7 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ initialSlug, onNavigat
               setSelectedStatus('ALL');
               setSelectedSource('ALL');
             }}
-            className="mt-4 px-4 py-2 bg-neutral-900 border border-neutral-700 text-white rounded text-xs hover:border-[#E00000]"
+            className="mt-4 px-4 py-2 bg-neutral-900 border border-neutral-700 text-white rounded text-xs hover:border-[#E00000] cursor-pointer"
           >
             Limpar Todos os Filtros
           </button>

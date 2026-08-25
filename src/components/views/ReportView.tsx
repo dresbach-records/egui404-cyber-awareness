@@ -15,9 +15,11 @@ import {
   ExternalLink,
   MessageSquare,
   Sparkles,
-  Info
+  Info,
+  Loader2
 } from 'lucide-react';
 import { ScamReportService, ContentSafetyService } from '../../services/dataService';
+import { reportsApi } from '../../services/api/reportsApi';
 import { ScamCategory } from '../../types';
 import { SoundEngine } from '../../services/audioService';
 
@@ -40,8 +42,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
   const [confirmedNoPersonalData, setConfirmedNoPersonalData] = useState(false);
   const [acceptedEducationalReview, setAcceptedEducationalReview] = useState(false);
 
-  // Validation errors
+  // Validation & Submission state
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const [submittedTicket, setSubmittedTicket] = useState<string | null>(null);
   const [copiedTicket, setCopiedTicket] = useState(false);
 
@@ -101,12 +104,14 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!handleValidate()) return;
 
+    setSubmitting(true);
     SoundEngine.playSuccessSound();
-    const result = ScamReportService.submitReport({
+
+    const reportData = {
       category,
       description: `[Tipo: ${reportType}] [Canal: ${contactMethod}] ${description}`,
       platform,
@@ -118,9 +123,18 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
       isAnonymous,
       confirmedNoPersonalData,
       acceptedEducationalReview
-    });
+    };
 
-    setSubmittedTicket(result.ticketId);
+    try {
+      const res = await reportsApi.submitReport(reportData);
+      setSubmittedTicket(res.ticketId || `EGUI-${Date.now().toString().slice(-6)}`);
+    } catch {
+      // Local fallback for offline mode
+      const result = ScamReportService.submitReport(reportData);
+      setSubmittedTicket(result.ticketId);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleCopyTicket = () => {

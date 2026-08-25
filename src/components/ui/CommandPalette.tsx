@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, X, ShieldAlert, FileText, AlertTriangle, BookOpen, ExternalLink, Flame } from 'lucide-react';
-import { SearchService } from '../../services/dataService';
+import { Search, X, ShieldAlert, FileText, AlertTriangle, BookOpen, ExternalLink, Flame, Loader2 } from 'lucide-react';
+import { searchApi } from '../../services/api/searchApi';
 import { SearchResultItem } from '../../types';
 import { RiskBadge } from './RiskBadge';
 import { SoundEngine } from '../../services/audioService';
@@ -14,27 +14,57 @@ interface CommandPaletteProps {
 export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, onNavigate }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResultItem[]>([]);
+  const [loading, setLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
       setQuery('');
-      setResults(SearchService.searchAll(''));
+      setResults([]);
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (query.trim()) {
-      const res = SearchService.searchAll(query);
-      setResults(res);
-      setSelectedIndex(0);
-    } else {
-      // Show popular/recent searches
-      setResults(SearchService.searchAll('pix').concat(SearchService.searchAll('phishing')).slice(0, 6));
+    if (!isOpen) return;
+
+    if (abortRef.current) {
+      abortRef.current.abort();
     }
-  }, [query]);
+
+    if (!query.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await searchApi.search(query, { limit: 12 }, controller.signal);
+        setResults(res.data || []);
+        setSelectedIndex(0);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          setResults([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query, isOpen]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -88,7 +118,11 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       >
         {/* Search Input Bar */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-[#1c1c1c] bg-[#0e0e0e]">
-          <Search className="w-5 h-5 text-[#FF1A1A]" />
+          {loading ? (
+            <Loader2 className="w-5 h-5 text-[#FF1A1A] animate-spin" />
+          ) : (
+            <Search className="w-5 h-5 text-[#FF1A1A]" />
+          )}
           <input
             ref={inputRef}
             type="text"

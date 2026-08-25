@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { NewsletterService } from '../services/dataService';
 import { SoundEngine } from '../services/audioService';
+import { ApiHealthBadge } from './ui/ApiHealthBadge';
 
 interface FooterProps {
   onNavigate: (path: string) => void;
@@ -227,13 +228,26 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
           </div>
         </div>
 
+        {/* Legal & Educational Disclaimer */}
+        <div className="py-6 border-b border-[#181818] text-[11px] text-[#777777] font-sans leading-relaxed space-y-2">
+          <p>
+            <strong className="text-[#AAAAAA]">Aviso Institucional & Educativo:</strong> Esta página tem função informativa e educativa. O conteúdo apresentado é exemplificativo e não exaustivo, uma vez que não é possível contemplar todos os casos de fraudes existentes. A ausência de determinado exemplar neste catálogo não significa que ele não seja válido ou real.
+          </p>
+          <p className="text-[10px] text-[#666666]">
+            O E GUI 404 é uma plataforma independente de pesquisa e conscientização e não representa institucionalmente a RNP/CAIS ou outros órgãos governamentais citados.
+          </p>
+        </div>
+
         {/* Bottom Disclaimer */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-sans">
-          <div className="flex items-center gap-2">
-            <Lock className="w-3.5 h-3.5 text-[#E00000]" />
-            <span>
-              Finalidade estritamente defensiva e educativa. Nenhum dado pessoal sensível é coletado.
-            </span>
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-500 font-sans">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Lock className="w-3.5 h-3.5 text-[#E00000]" />
+              <span>
+                Finalidade estritamente defensiva e educativa. Em conformidade com a LGPD.
+              </span>
+            </div>
+            <ApiHealthBadge />
           </div>
           <p className="font-tech text-[11px]">
             © {new Date().getFullYear()} E GUI 404 (恶鬼) · Cyber Awareness Platform.

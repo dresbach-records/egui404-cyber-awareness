@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { X, Flag, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { ForumService } from '../../services/dataService';
+import { forumApi } from '../../services/api/forumApi';
+import { reportsApi } from '../../services/api/reportsApi';
 import { SoundEngine } from '../../services/audioService';
 
 interface ForumReportModalProps {
@@ -20,9 +22,23 @@ export const ForumReportModal: React.FC<ForumReportModalProps> = ({
   const [details, setDetails] = useState('');
   const [isSent, setIsSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     SoundEngine.playClickSound();
+
+    try {
+      if (targetType === 'THREAD') {
+        await forumApi.reportThread(targetId, reason, details).catch(() => {});
+      } else {
+        await reportsApi.submitReport({
+          targetType: 'FORUM_POST',
+          targetId,
+          targetTitle: targetTitle || 'Post do Fórum',
+          reason,
+          details
+        }).catch(() => {});
+      }
+    } catch {}
 
     ForumService.submitForumReport({
       targetType,

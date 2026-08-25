@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   MessageSquare,
   Plus,
@@ -18,7 +18,9 @@ import {
   ArrowRight,
   ShieldCheck,
   FileText,
-  Tag
+  Tag,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import {
   ForumCategory,
@@ -28,6 +30,7 @@ import {
   ForumNotification
 } from '../../types';
 import { ForumService } from '../../services/dataService';
+import { forumApi } from '../../services/api/forumApi';
 import { SoundEngine } from '../../services/audioService';
 import { ForumThreadCard } from '../forum/ForumThreadCard';
 import { ForumThreadDetail } from '../forum/ForumThreadDetail';
@@ -77,35 +80,88 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [tags, setTags] = useState<ForumTag[]>([]);
   const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentMember, setCurrentMember] = useState<ForumMember>(ForumService.getMembers()[0]);
 
-  // Load Initial Data
-  const refreshData = () => {
-    const cats = ForumService.getCategories();
-    const tgs = ForumService.getTags();
-    const notifs = ForumService.getNotifications();
-    setCategories(cats);
-    setTags(tgs);
-    setNotifications(notifs);
+  // Fetch from real API backend with fallback
+  const fetchForumData = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch categories
+      let cats: ForumCategory[] = [];
+      try {
+        cats = await forumApi.getCategories(signal);
+      } catch {
+        cats = ForumService.getCategories();
+      }
+      if (!cats || cats.length === 0) {
+        cats = ForumService.getCategories();
+      }
+      setCategories(cats);
 
-    const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
-    let list = ForumService.getThreads({
-      categorySlug: activeCategorySlug !== 'ALL' ? activeCategorySlug : undefined,
-      tag: selectedTag || undefined,
-      search: searchQuery || undefined,
-      sortBy
-    });
+      // Fetch tags & notifications locally/synced
+      setTags(ForumService.getTags());
+      setNotifications(ForumService.getNotifications());
 
-    if (activeTab === 'BOOKMARKS') {
-      list = list.filter((t) => t.isBookmarkedByMe);
+      // Fetch threads
+      const sortParam = activeTab === 'POPULAR' ? 'popular' : activeTab === 'UNSOLVED' ? 'unanswered' : 'recent';
+      const categorySlugParam = activeCategorySlug !== 'ALL' ? activeCategorySlug : undefined;
+
+      let fetchedThreads: ForumThread[] = [];
+      try {
+        const res = await forumApi.getThreads(
+          {
+            categorySlug: categorySlugParam,
+            tag: selectedTag || undefined,
+            search: searchQuery.trim() || undefined,
+            sort: sortParam
+          },
+          signal
+        );
+        fetchedThreads = res.data || [];
+      } catch {
+        const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
+        fetchedThreads = ForumService.getThreads({
+          categorySlug: categorySlugParam,
+          tag: selectedTag || undefined,
+          search: searchQuery || undefined,
+          sortBy
+        });
+      }
+
+      if (!fetchedThreads || fetchedThreads.length === 0) {
+        const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
+        fetchedThreads = ForumService.getThreads({
+          categorySlug: categorySlugParam,
+          tag: selectedTag || undefined,
+          search: searchQuery || undefined,
+          sortBy
+        });
+      }
+
+      if (activeTab === 'BOOKMARKS') {
+        fetchedThreads = fetchedThreads.filter((t) => t.isBookmarkedByMe);
+      }
+
+      setThreads(fetchedThreads);
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        setError('Não foi possível sincronizar o fórum com o servidor.');
+      }
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
-
-    setThreads(list);
-  };
+  }, [activeCategorySlug, selectedTag, searchQuery, activeTab]);
 
   useEffect(() => {
-    refreshData();
-  }, [activeCategorySlug, selectedTag, searchQuery, activeTab]);
+    const controller = new AbortController();
+    fetchForumData(controller.signal);
+    return () => controller.abort();
+  }, [fetchForumData]);
 
   useEffect(() => {
     if (initialThreadSlug) {
@@ -120,7 +176,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
   // Active Thread Data for Detail View
   const activeThread = useMemo(() => {
     if (!activeThreadSlug) return null;
-    return ForumService.getThreadBySlug(activeThreadSlug);
+    return threads.find((t) => t.slug === activeThreadSlug) || ForumService.getThreadBySlug(activeThreadSlug);
   }, [activeThreadSlug, threads]);
 
   const activeThreadPosts = useMemo(() => {
@@ -137,12 +193,15 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const handleBackToThreads = () => {
     SoundEngine.playClickSound();
     setActiveThreadSlug(null);
-    refreshData();
+    fetchForumData();
   };
 
-  const handleBookmarkToggle = (threadId: string) => {
+  const handleBookmarkToggle = async (threadId: string) => {
+    try {
+      await forumApi.toggleBookmark(threadId);
+    } catch {}
     ForumService.toggleBookmarkThread(threadId);
-    refreshData();
+    fetchForumData();
   };
 
   const handleTagFilter = (tag: string) => {
@@ -208,7 +267,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
                       type="button"
                       onClick={() => {
                         ForumService.markAllNotificationsAsRead();
-                        refreshData();
+                        fetchForumData();
                       }}
                       className="text-[10px] text-neutral-500 hover:text-neutral-300"
                     >
@@ -277,7 +336,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
           posts={activeThreadPosts}
           currentMember={currentMember}
           onBack={handleBackToThreads}
-          onRefresh={refreshData}
+          onRefresh={fetchForumData}
           onOpenReportModal={(type, id, title) =>
             setReportModalData({ isOpen: true, targetType: type, targetId: id, targetTitle: title })
           }
@@ -314,7 +373,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
                 >
                   <span>Todas as Categorias</span>
                   <span className="font-mono text-[11px] opacity-60">
-                    {ForumService.getThreads({}).length}
+                    {threads.length}
                   </span>
                 </button>
 
@@ -513,7 +572,25 @@ export const ForumView: React.FC<ForumViewProps> = ({
 
             {/* Threads List Stream */}
             <div className="space-y-3">
-              {threads.length === 0 ? (
+              {loading ? (
+                <div className="p-12 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg text-center space-y-3 flex flex-col items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#E00000]" />
+                  <p className="text-xs text-neutral-400 font-mono">Carregando discussões do fórum...</p>
+                </div>
+              ) : error ? (
+                <div className="p-8 bg-[#0a0a0a] border border-red-900/40 rounded-lg text-center space-y-3">
+                  <AlertTriangle className="w-8 h-8 text-red-500 mx-auto" />
+                  <p className="text-xs text-red-400 font-mono">{error}</p>
+                  <button
+                    type="button"
+                    onClick={() => fetchForumData()}
+                    className="px-4 py-1.5 bg-[#1a1a1a] border border-neutral-700 text-xs rounded text-white hover:bg-neutral-800 cursor-pointer flex items-center gap-2 mx-auto"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Tentar Novamente</span>
+                  </button>
+                </div>
+              ) : threads.length === 0 ? (
                 <div className="p-12 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg text-center space-y-3">
                   <FileText className="w-10 h-10 text-neutral-600 mx-auto" />
                   <h3 className="text-base font-bold text-white">Nenhum tópico encontrado</h3>
@@ -555,7 +632,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={(newSlug) => {
             setIsCreateModalOpen(false);
-            refreshData();
+            fetchForumData();
             handleOpenThread(newSlug);
           }}
         />

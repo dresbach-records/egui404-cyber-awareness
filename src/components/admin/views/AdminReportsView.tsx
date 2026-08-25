@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
   Search,
@@ -12,18 +12,49 @@ import {
   Send,
   Zap,
   Lock,
-  ArrowUpRight
+  ArrowUpRight,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { ReportSubmission, ScamItem, ScamCategory } from '../../../types';
 import { ScamReportService, ScamService } from '../../../services/dataService';
+import { reportsApi } from '../../../services/api/reportsApi';
+import { scamsApi } from '../../../services/api/scamsApi';
 import { AuditLogService } from '../../../services/adminService';
 import { SoundEngine } from '../../../services/audioService';
 
 export const AdminReportsView: React.FC = () => {
-  const [reports, setReports] = useState<ReportSubmission[]>(() => ScamReportService.getAllReports());
+  const [reports, setReports] = useState<ReportSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
   const [inspectingReport, setInspectingReport] = useState<ReportSubmission | null>(null);
+
+  const fetchReports = async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await reportsApi.getAdminReports(
+        { status: selectedStatus !== 'ALL' ? selectedStatus : undefined, search: search.trim() || undefined },
+        signal
+      );
+      setReports(res.data || []);
+    } catch {
+      // Fallback for offline mode
+      setReports(ScamReportService.getAllReports());
+    } finally {
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchReports(controller.signal);
+    return () => controller.abort();
+  }, [selectedStatus]);
 
   const filteredReports = reports.filter((r) => {
     if (selectedStatus !== 'ALL' && r.status !== selectedStatus) return false;
@@ -39,10 +70,14 @@ export const AdminReportsView: React.FC = () => {
     return true;
   });
 
-  const handleUpdateStatus = (ticketId: string, status: ReportSubmission['status']) => {
+  const handleUpdateStatus = async (ticketId: string, status: ReportSubmission['status']) => {
     SoundEngine.playKeyClick();
+    try {
+      await reportsApi.updateReportStatus(ticketId, status);
+    } catch {}
+
     ScamReportService.updateReportStatus(ticketId, status);
-    setReports(ScamReportService.getAllReports());
+    setReports((prev) => prev.map((r) => (r.ticketId === ticketId ? { ...r, status } : r)));
 
     AuditLogService.log({
       user: 'moderator_triage',
@@ -59,7 +94,7 @@ export const AdminReportsView: React.FC = () => {
     }
   };
 
-  const handleConvertToArchive = (report: ReportSubmission) => {
+  const handleConvertToArchive = async (report: ReportSubmission) => {
     SoundEngine.playSuccessSound();
     const newScam: ScamItem = {
       id: `EGUI-COMMUNITY-${report.ticketId.replace('#', '')}`,
@@ -90,8 +125,12 @@ export const AdminReportsView: React.FC = () => {
       ]
     };
 
+    try {
+      await scamsApi.createScam(newScam);
+    } catch {}
+
     ScamService.saveScam(newScam);
-    handleUpdateStatus(report.ticketId, 'APPROVED');
+    await handleUpdateStatus(report.ticketId, 'APPROVED');
 
     AuditLogService.log({
       user: 'moderator_triage',
@@ -145,7 +184,12 @@ export const AdminReportsView: React.FC = () => {
 
       {/* Reports List */}
       <div className="grid grid-cols-1 gap-3">
-        {filteredReports.length === 0 ? (
+        {loading ? (
+          <div className="p-8 text-center text-xs font-mono text-[#888888] bg-[#0D0D0D] border border-[#222222] rounded-xl flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-[#E00000]" />
+            <span>Carregando denúncias da fila...</span>
+          </div>
+        ) : filteredReports.length === 0 ? (
           <div className="p-8 text-center text-xs font-mono text-[#666666] bg-[#0D0D0D] border border-[#222222] rounded-xl">
             Nenhuma denúncia encontrada na fila.
           </div>

@@ -14,6 +14,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { SoundEngine } from '../services/audioService';
+import { ApiHealthBadge } from './ui/ApiHealthBadge';
 
 interface NavbarProps {
   currentPath: string;
@@ -130,10 +131,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Action Tools: Search, Sound, Reduce Motion, Language, Report */}
           <div className="hidden sm:flex items-center gap-2">
-            {/* Live Signal Beacon */}
-            <div className="hidden xl:flex items-center gap-1.5 px-2 py-1 bg-neutral-900/80 border border-neutral-800 rounded text-[10px] text-neutral-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 radar-beacon" />
-              <span>SIGNAL: ACTIVE</span>
+            {/* Live API Health Status */}
+            <div className="hidden xl:flex items-center">
+              <ApiHealthBadge compact />
             </div>
 
             {/* Quick Search */}

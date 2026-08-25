@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { ForumThread, ForumPost, ForumMember } from '../../types';
 import { ForumService, ContentSafetyService } from '../../services/dataService';
+import { forumApi } from '../../services/api/forumApi';
 import { SoundEngine } from '../../services/audioService';
 
 interface ForumThreadDetailProps {
@@ -53,14 +54,20 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
   const isThreadAuthor = thread.authorId === currentMember.id;
   const isModOrAdmin = currentMember.role === 'ADMIN' || currentMember.role === 'MODERATOR';
 
-  const handleLikeThread = () => {
+  const handleLikeThread = async () => {
     SoundEngine.playClickSound();
+    try {
+      await forumApi.toggleLike(thread.id);
+    } catch {}
     ForumService.toggleLikeThread(thread.id);
     onRefresh();
   };
 
-  const handleBookmarkThread = () => {
+  const handleBookmarkThread = async () => {
     SoundEngine.playClickSound();
+    try {
+      await forumApi.toggleBookmark(thread.id);
+    } catch {}
     ForumService.toggleBookmarkThread(thread.id);
     onRefresh();
   };
@@ -71,8 +78,11 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
     onRefresh();
   };
 
-  const handleMarkSolution = (postId: string) => {
+  const handleMarkSolution = async (postId: string) => {
     SoundEngine.playSuccessSound();
+    try {
+      await forumApi.markSolution(thread.id, postId);
+    } catch {}
     ForumService.markPostAsSolution(thread.id, postId);
     onRefresh();
   };
@@ -83,7 +93,7 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const handleSubmitReply = (e: React.FormEvent) => {
+  const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyText.trim()) return;
 
@@ -97,22 +107,34 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
 
-    const result = ForumService.createPost(thread.id, {
-      content: replyText,
-      sourceUrl: sourceUrl || undefined,
-      quotedPostId: quotingPost ? quotingPost.id : undefined
-    });
+    try {
+      try {
+        await forumApi.createPost(thread.id, {
+          content: replyText,
+          quotedPostId: quotingPost ? quotingPost.id : undefined,
+          sourceUrl: sourceUrl || undefined
+        });
+      } catch {}
 
-    setIsSubmitting(false);
+      const result = ForumService.createPost(thread.id, {
+        content: replyText,
+        sourceUrl: sourceUrl || undefined,
+        quotedPostId: quotingPost ? quotingPost.id : undefined
+      });
 
-    if (result.success) {
-      SoundEngine.playSuccessSound();
-      setReplyText('');
-      setSourceUrl('');
-      setQuotingPost(null);
-      onRefresh();
-    } else {
-      setErrorMsg(result.error || 'Erro ao enviar resposta.');
+      if (result.success) {
+        SoundEngine.playSuccessSound();
+        setReplyText('');
+        setSourceUrl('');
+        setQuotingPost(null);
+        onRefresh();
+      } else {
+        setErrorMsg(result.error || 'Erro ao enviar resposta.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Erro ao enviar resposta.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

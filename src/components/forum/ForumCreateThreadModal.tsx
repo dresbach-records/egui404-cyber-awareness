@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ForumCategory, ForumTag } from '../../types';
 import { ForumService, ContentSafetyService } from '../../services/dataService';
+import { forumApi } from '../../services/api/forumApi';
 import { SoundEngine } from '../../services/audioService';
 
 interface ForumCreateThreadModalProps {
@@ -59,7 +60,7 @@ export const ForumCreateThreadModal: React.FC<ForumCreateThreadModalProps> = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !content.trim() || !confirmedSafetyRules) {
       setErrorMsg('Preencha os campos obrigatórios e confirme as diretrizes de segurança.');
@@ -86,21 +87,45 @@ export const ForumCreateThreadModal: React.FC<ForumCreateThreadModalProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
 
-    const result = ForumService.createThread({
-      title,
-      categoryId,
-      content,
-      sourceUrl: sourceUrl || undefined,
-      tags: selectedTags
-    });
+    try {
+      let createdSlug: string | null = null;
+      try {
+        const res = await forumApi.createThread({
+          title,
+          categoryId,
+          content,
+          sourceUrl: sourceUrl || undefined,
+          tags: selectedTags
+        });
+        if (res && res.slug) {
+          createdSlug = res.slug;
+        }
+      } catch {
+        // Fallback local service
+      }
 
-    setIsSubmitting(false);
+      const result = ForumService.createThread({
+        title,
+        categoryId,
+        content,
+        sourceUrl: sourceUrl || undefined,
+        tags: selectedTags
+      });
 
-    if (result.success && result.thread) {
-      SoundEngine.playSuccessSound();
-      onSuccess(result.thread.slug);
-    } else {
-      setErrorMsg(result.error || 'Erro ao criar discussão.');
+      if (!createdSlug && result.success && result.thread) {
+        createdSlug = result.thread.slug;
+      }
+
+      if (createdSlug) {
+        SoundEngine.playSuccessSound();
+        onSuccess(createdSlug);
+      } else {
+        setErrorMsg(result.error || 'Erro ao criar discussão.');
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Erro ao processar postagem.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
