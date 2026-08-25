@@ -38,6 +38,42 @@ export default function App() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
+  // SEO title and robots metadata for the client-side routes.
+  useEffect(() => {
+    const cleanPath = currentPath.split('?')[0];
+    const titles: Record<string, string> = {
+      '/': 'E GUI 404 — Conscientização e Segurança Digital',
+      '/archive': 'E GUI 404 — Arquivo de Ameaças',
+      '/threats': 'E GUI 404 — Inteligência de Ameaças',
+      '/cases': 'E GUI 404 — Casos Reais',
+      '/forum': 'E GUI 404 — Fórum',
+      '/education': 'E GUI 404 — Educação',
+      '/quiz': 'E GUI 404 — Quiz de Segurança Digital',
+      '/lab': 'E GUI 404 — Laboratório',
+      '/about': 'E GUI 404 — Sobre o Projeto',
+      '/report': 'E GUI 404 — Denunciar Golpe',
+      '/contact': 'E GUI 404 — Contato',
+      '/alerts': 'E GUI 404 — Alertas',
+      '/methodology': 'E GUI 404 — Metodologia',
+      '/sources/rnp': 'E GUI 404 — Fonte RNP',
+      '/privacy': 'E GUI 404 — Privacidade',
+      '/terms': 'E GUI 404 — Termos de Uso',
+      '/cookies': 'E GUI 404 — Cookies',
+      '/editorial-policy': 'E GUI 404 — Política Editorial',
+      '/disclaimer': 'E GUI 404 — Disclaimer',
+      '/admin': 'E GUI 404 — Administração'
+    };
+    const title = titles[cleanPath] || (cleanPath.startsWith('/archive/') ? 'E GUI 404 — Arquivo de Ameaças' : cleanPath.startsWith('/education/') ? 'E GUI 404 — Educação' : cleanPath.startsWith('/forum/') ? 'E GUI 404 — Fórum' : 'E GUI 404 — Página não encontrada');
+    const canonicalUrl = `https://egui404.fun${cleanPath === '/' ? '/' : cleanPath}`;
+    document.title = title;
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', canonicalUrl);
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', title);
+    document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
+    document.querySelector('meta[name="twitter:title"]')?.setAttribute('content', title);
+    const robots = document.querySelector('meta[name="robots"]');
+    if (robots) robots.setAttribute('content', cleanPath === '/admin' || cleanPath.startsWith('/admin/') ? 'noindex, nofollow' : 'index, follow');
+  }, [currentPath]);
+
   // Sync with browser history
   useEffect(() => {
     const handlePopState = () => {
