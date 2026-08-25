@@ -1,8 +1,6 @@
 import React from 'react';
-import {
-  Shield,
-  Lock
-} from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { FaInstagram, FaYoutube, FaTiktok, FaLinkedinIn, FaTelegram, FaXTwitter } from 'react-icons/fa6';
 import { ApiHealthBadge } from './ui/ApiHealthBadge';
 
 interface FooterProps {
@@ -40,8 +38,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
               <span className="text-[10px] uppercase text-neutral-500 tracking-wider block mb-2 font-bold">
                 Fontes & Redes Oficiais:
               </span>
-              <div className="flex items-center gap-3 text-neutral-400 text-xs">
-                <span className="text-[11px] text-neutral-600">Canais oficiais em configuração.</span>
+              <div className="flex flex-wrap items-center gap-2.5" aria-label="Redes sociais oficiais">
+                {[
+                  { label: 'Instagram', Icon: FaInstagram },
+                  { label: 'YouTube', Icon: FaYoutube },
+                  { label: 'TikTok', Icon: FaTiktok },
+                  { label: 'LinkedIn', Icon: FaLinkedinIn },
+                  { label: 'Telegram', Icon: FaTelegram },
+                  { label: 'X', Icon: FaXTwitter },
+                ].map(({ label, Icon }) => (
+                  <span
+                    key={label}
+                    title={`${label} — canal oficial em configuração`}
+                    aria-label={`${label} — canal oficial em configuração`}
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[#292929] bg-[#0b0b0b] text-[#E00000] opacity-80"
+                  >
+                    <span className="[&>svg]:h-4 [&>svg]:w-4" aria-hidden="true"><Icon /></span>
+                  </span>
+                ))}
+                <span className="ml-1 text-[10px] text-neutral-600">Canais oficiais em configuração.</span>
               </div>
             </div>
           </div>
