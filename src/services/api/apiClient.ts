@@ -1,6 +1,7 @@
 import { ApiError, RequestOptions } from './types';
 
-const RAW_API_URL = import.meta.env.VITE_API_BASE_URL || 'https://e-gui-404.vercel.app/api/v1';
+const DEFAULT_API_URL = 'https://api.egui404.fun/api/v1';
+const RAW_API_URL = import.meta.env.VITE_API_BASE_URL || DEFAULT_API_URL;
 export const API_BASE_URL = RAW_API_URL.replace(/\/+$/, '');
 
 function formatErrorMessage(statusCode: number, serverMessage?: string): string {
@@ -29,7 +30,7 @@ function formatErrorMessage(statusCode: number, serverMessage?: string): string 
   }
 }
 
-function buildUrl(path: string, params?: Record<string, string | number | boolean | undefined | null>): string {
+function buildUrl(path: string, params?: object): string {
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   const fullUrl = new URL(`${API_BASE_URL}${cleanPath}`);
 
@@ -142,7 +143,7 @@ async function request<T>(
       'Não foi possível conectar ao servidor backend. Verifique sua conexão.',
       0,
       'NETWORK_ERROR',
-      err
+      err instanceof Error ? { message: err.message } : undefined
     );
   }
 }

@@ -40,6 +40,9 @@ export const ContactView: React.FC<ContactViewProps> = ({ onNavigate, language }
         <p className="text-neutral-400 font-sans text-sm sm:text-base">
           Canal de contato seguro para imprensa, pesquisadores de segurança, parcerias educativas e solicitações institucionais.
         </p>
+        <p className="text-xs text-neutral-400">
+          Contato geral: <a href="mailto:contato@egui404.fun" className="text-white hover:text-[#FF1A1A]">contato@egui404.fun</a> · Suporte: <a href="mailto:suporte@egui404.fun" className="text-white hover:text-[#FF1A1A]">suporte@egui404.fun</a>
+        </p>
       </div>
 
       {submitted ? (

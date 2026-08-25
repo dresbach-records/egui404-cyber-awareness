@@ -4,8 +4,14 @@ import { PaginationMeta } from './types';
 
 export const reportsApi = {
   submitReport: async (report: Partial<ReportSubmission>): Promise<{ ticketId: string; status: string; message?: string }> => {
-    const res = await apiClient.post<any>('/reports', report);
-    return (res && 'data' in res ? res.data : res) as { ticketId: string; status: string; message?: string };
+    const res = await apiClient.post<unknown>('/reports', report);
+    const payload = res as { ticketId?: string; status?: string; message?: string; data?: { ticketId?: string; status?: string; message?: string } };
+    const data = payload.data ?? payload;
+    return {
+      ticketId: data.ticketId ?? '',
+      status: data.status ?? 'RECEIVED',
+      message: data.message
+    };
   },
 
   getAdminReports: async (params?: { status?: string; page?: number; limit?: number; search?: string }, signal?: AbortSignal): Promise<{ data: ReportSubmission[]; meta?: PaginationMeta }> => {

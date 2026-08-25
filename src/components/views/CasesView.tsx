@@ -45,8 +45,8 @@ export const CasesView: React.FC<CasesViewProps> = ({ initialCaseId, onNavigate,
           setActiveCase(list[0]);
         }
       }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message || 'Falha ao carregar dossiês investigativos.');
       }
     } finally {

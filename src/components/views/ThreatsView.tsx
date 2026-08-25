@@ -52,8 +52,8 @@ export const ThreatsView: React.FC<ThreatsViewProps> = ({ initialThreatId, onNav
           setSelectedThreat(list[0]);
         }
       }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message || 'Falha ao carregar matriz de ameaças.');
       }
     } finally {
@@ -160,7 +160,14 @@ export const ThreatsView: React.FC<ThreatsViewProps> = ({ initialThreatId, onNav
         <div className="text-center py-16 bg-[#080808] border border-[#1a1a1a] rounded-lg">
           <Flame className="w-10 h-10 mx-auto text-neutral-600 mb-3" />
           <h3 className="text-white text-lg font-bold">Nenhuma ameaça encontrada para este filtro</h3>
-          <p className="text-neutral-400 text-xs mt-1">Selecione outro status para visualizar registros.</p>
+          <p className="text-neutral-400 text-xs mt-1">A API não retornou registros para este filtro.</p>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('ALL')}
+            className="mt-4 px-3 py-2 border border-[#333] text-neutral-300 rounded text-xs hover:border-[#E00000] cursor-pointer"
+          >
+            Limpar filtro
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

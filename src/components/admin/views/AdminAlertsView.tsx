@@ -70,8 +70,7 @@ export const AdminAlertsView: React.FC = () => {
       risk,
       recommendedAction,
       urgent,
-      status: 'ACTIVE',
-      timestamp: new Date().toISOString()
+      status: 'ACTIVE'
     };
 
     let newAlert: ScamAlert;

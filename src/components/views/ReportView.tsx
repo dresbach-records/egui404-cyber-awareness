@@ -18,7 +18,7 @@ import {
   Info,
   Loader2
 } from 'lucide-react';
-import { ScamReportService, ContentSafetyService } from '../../services/dataService';
+import { ContentSafetyService } from '../../services/dataService';
 import { reportsApi } from '../../services/api/reportsApi';
 import { ScamCategory } from '../../types';
 import { SoundEngine } from '../../services/audioService';
@@ -45,6 +45,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
   // Validation & Submission state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittedTicket, setSubmittedTicket] = useState<string | null>(null);
   const [copiedTicket, setCopiedTicket] = useState(false);
 
@@ -109,7 +110,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
     if (!handleValidate()) return;
 
     setSubmitting(true);
-    SoundEngine.playSuccessSound();
+    setSubmitError(null);
 
     const reportData = {
       category,
@@ -127,11 +128,25 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
 
     try {
       const res = await reportsApi.submitReport(reportData);
-      setSubmittedTicket(res.ticketId || `EGUI-${Date.now().toString().slice(-6)}`);
-    } catch {
-      // Local fallback for offline mode
-      const result = ScamReportService.submitReport(reportData);
-      setSubmittedTicket(result.ticketId);
+      if (!res.ticketId) {
+        throw new Error('A API não retornou um identificador de protocolo.');
+      }
+      SoundEngine.playSuccessSound();
+      setSubmittedTicket(res.ticketId);
+    } catch (error) {
+      const statusCode = error instanceof Error && 'statusCode' in error
+        ? (error as Error & { statusCode?: number }).statusCode
+        : undefined;
+      const messages: Record<number, string> = {
+        401: 'Sua sessão expirou. Atualize a página e tente novamente.',
+        403: 'Você não tem permissão para enviar este relato.',
+        404: 'O serviço de denúncias não foi encontrado.',
+        409: 'Este relato já foi registrado.',
+        422: 'Revise os dados informados e tente novamente.',
+        429: 'Muitos envios foram realizados. Aguarde e tente novamente.',
+        500: 'O serviço de denúncias está temporariamente indisponível.'
+      };
+      setSubmitError(statusCode ? messages[statusCode] || 'Não foi possível registrar o relato.' : 'Não foi possível conectar ao serviço de denúncias. Tente novamente.');
     } finally {
       setSubmitting(false);
     }
@@ -158,6 +173,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
         </h1>
         <p className="text-neutral-400 font-sans text-sm sm:text-base max-w-2xl">
           Envie evidências de abordagens fraudulentas, números suspeitos ou solicite correções em casos documentados. Seus relatos alimentam o repositório público de inteligência contra o cibercrime.
+        </p>
+        <p className="text-xs text-neutral-400">
+          Para comunicações institucionais sobre denúncias, utilize <a href="mailto:denuncias@egui404.fun" className="text-white hover:text-[#FF1A1A]">denuncias@egui404.fun</a>.
         </p>
       </div>
 
@@ -524,13 +542,19 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
               <span>Canal com criptografia em trânsito e anonimização ativa.</span>
             </div>
 
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-8 py-3 bg-[#E00000] hover:bg-[#b00000] text-white text-xs font-tech font-bold uppercase tracking-widest rounded transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-950/40 cursor-pointer"
-            >
-              <Send className="w-4 h-4" />
-              ENVIAR RELATO DEFENSIVO
-            </button>
+  {submitError && (
+    <div role="alert" className="w-full text-xs text-[#FF6B6B] border border-[#7F1D1D] bg-[#2A0D0D] rounded px-3 py-2">
+      {submitError}
+    </div>
+  )}
+  <button
+  type="submit"
+  disabled={submitting}
+  className="w-full sm:w-auto px-8 py-3 bg-[#E00000] hover:bg-[#b00000] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-tech font-bold uppercase tracking-widest rounded transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-950/40 cursor-pointer"
+  >
+  <Send className="w-4 h-4" />
+  {submitting ? 'ENVIANDO...' : 'ENVIAR RELATO DEFENSIVO'}
+  </button>
           </div>
         </form>
       )}

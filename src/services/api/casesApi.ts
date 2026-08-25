@@ -14,12 +14,13 @@ export interface CaseQueryParams {
 
 export const casesApi = {
   getCases: async (params?: CaseQueryParams, signal?: AbortSignal): Promise<{ data: CaseFile[]; meta?: PaginationMeta }> => {
-    const res = await apiClient.get<any>('/cases', { params, signal });
+    const res = await apiClient.get<unknown>('/cases', { params: params as object, signal });
+    const payload = res as { data?: unknown; meta?: PaginationMeta };
 
-    if (res && 'data' in res && Array.isArray(res.data)) {
+    if (Array.isArray(payload.data)) {
       return {
-        data: res.data as CaseFile[],
-        meta: res.meta
+        data: payload.data as CaseFile[],
+        meta: payload.meta
       };
     }
 
@@ -34,8 +35,9 @@ export const casesApi = {
   },
 
   getCaseById: async (id: string, signal?: AbortSignal): Promise<CaseFile> => {
-    const res = await apiClient.get<any>(`/cases/${encodeURIComponent(id)}`, { signal });
-    return (res && 'data' in res ? res.data : res) as CaseFile;
+    const res = await apiClient.get<unknown>(`/cases/${encodeURIComponent(id)}`, { signal });
+    const payload = res as { data?: unknown };
+    return (payload.data ?? res) as CaseFile;
   },
 
   createCase: async (caseData: Partial<CaseFile>): Promise<CaseFile> => {

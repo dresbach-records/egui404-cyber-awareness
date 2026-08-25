@@ -48,7 +48,10 @@ export const EducationView: React.FC<EducationViewProps> = ({ initialSlug, onNav
     setError(null);
     try {
       const res = await articlesApi.getArticles(
-        { category: selectedCat !== 'ALL' ? selectedCat : undefined },
+        {
+          category: selectedCat !== 'ALL' ? selectedCat : undefined,
+          status: 'PUBLISHED'
+        },
         signal
       );
       const list = res.data || [];
@@ -63,8 +66,8 @@ export const EducationView: React.FC<EducationViewProps> = ({ initialSlug, onNav
           }).catch(() => {});
         }
       }
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message || 'Falha ao carregar guias educativos.');
       }
     } finally {

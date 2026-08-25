@@ -19,7 +19,7 @@ import {
   Pin
 } from 'lucide-react';
 import { ForumThread, ForumPost, ForumMember } from '../../types';
-import { ForumService, ContentSafetyService } from '../../services/dataService';
+import { ContentSafetyService } from '../../services/dataService';
 import { forumApi } from '../../services/api/forumApi';
 import { SoundEngine } from '../../services/audioService';
 
@@ -58,33 +58,40 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
     SoundEngine.playClickSound();
     try {
       await forumApi.toggleLike(thread.id);
-    } catch {}
-    ForumService.toggleLikeThread(thread.id);
-    onRefresh();
+      onRefresh();
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Não foi possível atualizar a curtida.');
+    }
   };
 
   const handleBookmarkThread = async () => {
     SoundEngine.playClickSound();
     try {
       await forumApi.toggleBookmark(thread.id);
-    } catch {}
-    ForumService.toggleBookmarkThread(thread.id);
-    onRefresh();
+      onRefresh();
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Não foi possível atualizar o item salvo.');
+    }
   };
 
-  const handleLikePost = (postId: string) => {
+  const handleLikePost = async (postId: string) => {
     SoundEngine.playClickSound();
-    ForumService.toggleLikePost(thread.id, postId);
-    onRefresh();
+    try {
+      await forumApi.toggleLike(postId);
+      onRefresh();
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Não foi possível atualizar a curtida.');
+    }
   };
 
   const handleMarkSolution = async (postId: string) => {
     SoundEngine.playSuccessSound();
     try {
       await forumApi.markSolution(thread.id, postId);
-    } catch {}
-    ForumService.markPostAsSolution(thread.id, postId);
-    onRefresh();
+      onRefresh();
+    } catch (error) {
+      setErrorMsg(error instanceof Error ? error.message : 'Não foi possível marcar a solução.');
+    }
   };
 
   const handleCopyLink = () => {
@@ -108,29 +115,16 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
     setErrorMsg(null);
 
     try {
-      try {
-        await forumApi.createPost(thread.id, {
-          content: replyText,
-          quotedPostId: quotingPost ? quotingPost.id : undefined,
-          sourceUrl: sourceUrl || undefined
-        });
-      } catch {}
-
-      const result = ForumService.createPost(thread.id, {
+      await forumApi.createPost(thread.id, {
         content: replyText,
-        sourceUrl: sourceUrl || undefined,
-        quotedPostId: quotingPost ? quotingPost.id : undefined
+        quotedPostId: quotingPost ? quotingPost.id : undefined,
+        sourceUrl: sourceUrl || undefined
       });
-
-      if (result.success) {
-        SoundEngine.playSuccessSound();
-        setReplyText('');
-        setSourceUrl('');
-        setQuotingPost(null);
-        onRefresh();
-      } else {
-        setErrorMsg(result.error || 'Erro ao enviar resposta.');
-      }
+      SoundEngine.playSuccessSound();
+      setReplyText('');
+      setSourceUrl('');
+      setQuotingPost(null);
+      onRefresh();
     } catch (err: any) {
       setErrorMsg(err?.message || 'Erro ao enviar resposta.');
     } finally {

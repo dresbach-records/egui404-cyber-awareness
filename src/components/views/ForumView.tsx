@@ -27,10 +27,12 @@ import {
   ForumThread,
   ForumTag,
   ForumMember,
+  ForumPost,
   ForumNotification
 } from '../../types';
 import { ForumService } from '../../services/dataService';
 import { forumApi } from '../../services/api/forumApi';
+import { notificationsApi } from '../../services/api/notificationsApi';
 import { SoundEngine } from '../../services/audioService';
 import { ForumThreadCard } from '../forum/ForumThreadCard';
 import { ForumThreadDetail } from '../forum/ForumThreadDetail';
@@ -80,74 +82,46 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const [categories, setCategories] = useState<ForumCategory[]>([]);
   const [tags, setTags] = useState<ForumTag[]>([]);
   const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [activeThreadPosts, setActiveThreadPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentMember, setCurrentMember] = useState<ForumMember>(ForumService.getMembers()[0]);
 
-  // Fetch from real API backend with fallback
+  // Dados operacionais do fórum vêm exclusivamente da API oficial.
   const fetchForumData = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch categories
-      let cats: ForumCategory[] = [];
-      try {
-        cats = await forumApi.getCategories(signal);
-      } catch {
-        cats = ForumService.getCategories();
-      }
-      if (!cats || cats.length === 0) {
-        cats = ForumService.getCategories();
-      }
+      const cats = await forumApi.getCategories(signal);
       setCategories(cats);
 
-      // Fetch tags & notifications locally/synced
+      // Tags permanecem parte da configuração editorial do fórum; notificações vêm da API.
       setTags(ForumService.getTags());
-      setNotifications(ForumService.getNotifications());
+      const fetchedNotifications = await notificationsApi.getNotifications(signal);
+      setNotifications(fetchedNotifications);
 
       // Fetch threads
       const sortParam = activeTab === 'POPULAR' ? 'popular' : activeTab === 'UNSOLVED' ? 'unanswered' : 'recent';
       const categorySlugParam = activeCategorySlug !== 'ALL' ? activeCategorySlug : undefined;
 
-      let fetchedThreads: ForumThread[] = [];
-      try {
-        const res = await forumApi.getThreads(
-          {
-            categorySlug: categorySlugParam,
-            tag: selectedTag || undefined,
-            search: searchQuery.trim() || undefined,
-            sort: sortParam
-          },
-          signal
-        );
-        fetchedThreads = res.data || [];
-      } catch {
-        const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
-        fetchedThreads = ForumService.getThreads({
+      const res = await forumApi.getThreads(
+        {
           categorySlug: categorySlugParam,
           tag: selectedTag || undefined,
-          search: searchQuery || undefined,
-          sortBy
-        });
-      }
-
-      if (!fetchedThreads || fetchedThreads.length === 0) {
-        const sortBy = activeTab === 'BOOKMARKS' ? 'LATEST' : activeTab;
-        fetchedThreads = ForumService.getThreads({
-          categorySlug: categorySlugParam,
-          tag: selectedTag || undefined,
-          search: searchQuery || undefined,
-          sortBy
-        });
-      }
+          search: searchQuery.trim() || undefined,
+          sort: sortParam
+        },
+        signal
+      );
+      let fetchedThreads = res.data || [];
 
       if (activeTab === 'BOOKMARKS') {
         fetchedThreads = fetchedThreads.filter((t) => t.isBookmarkedByMe);
       }
 
       setThreads(fetchedThreads);
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
+    } catch (err) {
+      if (!(err instanceof Error && err.name === 'AbortError')) {
         setError('Não foi possível sincronizar o fórum com o servidor.');
       }
     } finally {
@@ -176,12 +150,23 @@ export const ForumView: React.FC<ForumViewProps> = ({
   // Active Thread Data for Detail View
   const activeThread = useMemo(() => {
     if (!activeThreadSlug) return null;
-    return threads.find((t) => t.slug === activeThreadSlug) || ForumService.getThreadBySlug(activeThreadSlug);
+    return threads.find((t) => t.slug === activeThreadSlug) || null;
   }, [activeThreadSlug, threads]);
 
-  const activeThreadPosts = useMemo(() => {
-    if (!activeThread) return [];
-    return ForumService.getPosts(activeThread.id);
+  useEffect(() => {
+    const controller = new AbortController();
+    if (!activeThread) {
+      setActiveThreadPosts([]);
+      return () => controller.abort();
+    }
+    forumApi.getPosts(activeThread.id, undefined, controller.signal)
+      .then((response) => setActiveThreadPosts(response.data))
+      .catch((requestError) => {
+        if (requestError instanceof Error && requestError.name !== 'AbortError') {
+          setError('Não foi possível carregar as respostas deste tópico.');
+        }
+      });
+    return () => controller.abort();
   }, [activeThread]);
 
   const handleOpenThread = (slug: string) => {
@@ -199,9 +184,10 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const handleBookmarkToggle = async (threadId: string) => {
     try {
       await forumApi.toggleBookmark(threadId);
-    } catch {}
-    ForumService.toggleBookmarkThread(threadId);
-    fetchForumData();
+      fetchForumData();
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível salvar o tópico.');
+    }
   };
 
   const handleTagFilter = (tag: string) => {
@@ -265,9 +251,10 @@ export const ForumView: React.FC<ForumViewProps> = ({
                     <span className="font-bold text-white uppercase font-tech">Notificações</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        ForumService.markAllNotificationsAsRead();
-                        fetchForumData();
+                      onClick={async () => {
+                        await notificationsApi.markAllAsRead();
+                        const refreshed = await notificationsApi.getNotifications();
+                        setNotifications(refreshed);
                       }}
                       className="text-[10px] text-neutral-500 hover:text-neutral-300"
                     >
@@ -282,8 +269,11 @@ export const ForumView: React.FC<ForumViewProps> = ({
                       notifications.map((notif) => (
                         <div
                           key={notif.id}
-                          onClick={() => {
-                            ForumService.markNotificationAsRead(notif.id);
+                          onClick={async () => {
+                            if (!notif.read) {
+                              await notificationsApi.markAsRead(notif.id);
+                              setNotifications((current) => current.map((item) => item.id === notif.id ? { ...item, read: true } : item));
+                            }
                             setIsNotifsOpen(false);
                             if (notif.threadSlug) handleOpenThread(notif.threadSlug);
                           }}

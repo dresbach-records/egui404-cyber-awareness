@@ -15,11 +15,20 @@ export interface ThreatQueryParams {
   order?: 'asc' | 'desc';
 }
 
+interface ThreatListPayload {
+  data?: unknown;
+  meta?: PaginationMeta;
+}
+
+function isThreatListPayload(value: unknown): value is ThreatListPayload {
+  return typeof value === 'object' && value !== null;
+}
+
 export const threatsApi = {
   getThreats: async (params?: ThreatQueryParams, signal?: AbortSignal): Promise<{ data: ThreatItem[]; meta?: PaginationMeta }> => {
-    const res = await apiClient.get<any>('/threats', { params, signal });
+    const res = await apiClient.get<unknown>('/threats', { params: params as object, signal });
 
-    if (res && 'data' in res && Array.isArray(res.data)) {
+    if (isThreatListPayload(res) && Array.isArray(res.data)) {
       return {
         data: res.data as ThreatItem[],
         meta: res.meta
@@ -37,8 +46,8 @@ export const threatsApi = {
   },
 
   getThreatBySlug: async (slugOrId: string, signal?: AbortSignal): Promise<ThreatItem> => {
-    const res = await apiClient.get<any>(`/threats/${encodeURIComponent(slugOrId)}`, { signal });
-    return (res && 'data' in res ? res.data : res) as ThreatItem;
+    const res = await apiClient.get<unknown>(`/threats/${encodeURIComponent(slugOrId)}`, { signal });
+    return (isThreatListPayload(res) && 'data' in res ? res.data : res) as ThreatItem;
   },
 
   createThreat: async (threat: Partial<ThreatItem>): Promise<ThreatItem> => {

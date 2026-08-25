@@ -12,12 +12,13 @@ export interface AlertQueryParams {
 
 export const alertsApi = {
   getAlerts: async (params?: AlertQueryParams, signal?: AbortSignal): Promise<{ data: ScamAlert[]; meta?: PaginationMeta }> => {
-    const res = await apiClient.get<any>('/alerts', { params, signal });
+    const res = await apiClient.get<unknown>('/alerts', { params: params as object, signal });
+    const payload = res as { data?: unknown; meta?: PaginationMeta };
 
-    if (res && 'data' in res && Array.isArray(res.data)) {
+    if (Array.isArray(payload.data)) {
       return {
-        data: res.data as ScamAlert[],
-        meta: res.meta
+        data: payload.data as ScamAlert[],
+        meta: payload.meta
       };
     }
 
@@ -32,8 +33,9 @@ export const alertsApi = {
   },
 
   getAlertById: async (id: string, signal?: AbortSignal): Promise<ScamAlert> => {
-    const res = await apiClient.get<any>(`/alerts/${encodeURIComponent(id)}`, { signal });
-    return (res && 'data' in res ? res.data : res) as ScamAlert;
+    const res = await apiClient.get<unknown>(`/alerts/${encodeURIComponent(id)}`, { signal });
+    const payload = res as { data?: unknown };
+    return (payload.data ?? res) as ScamAlert;
   },
 
   createAlert: async (alert: Partial<ScamAlert>): Promise<ScamAlert> => {

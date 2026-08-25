@@ -58,7 +58,7 @@ export class ApiError extends Error {
 }
 
 export interface RequestOptions {
-  params?: Record<string, string | number | boolean | undefined | null>;
+  params?: object;
   headers?: Record<string, string>;
   signal?: AbortSignal;
   includeCredentials?: boolean;
