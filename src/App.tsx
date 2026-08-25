@@ -19,6 +19,7 @@ import { AdminView } from './components/views/AdminView';
 import { LegalView } from './components/views/LegalViews';
 import { RnpSourceView } from './components/views/RnpSourceView';
 import { MethodologyView } from './components/views/MethodologyView';
+import { AuthView } from './components/views/AuthView';
 import { NotFoundView } from './components/views/NotFoundView';
 import { SoundEngine } from './services/audioService';
 
@@ -47,6 +48,9 @@ export default function App() {
       '/threats': { title: 'E GUI 404 — Ameaças Digitais', description: 'Informação pública para reconhecer e compreender ameaças digitais.' },
       '/cases': { title: 'E GUI 404 — Casos Reais de Fraudes Digitais', description: 'Casos documentados para educação e conscientização sobre fraudes digitais.' },
       '/forum': { title: 'E GUI 404 — Fórum Privado', description: 'Área comunitária privada do E GUI 404.' },
+      '/auth/login': { title: 'E GUI 404 — Entrar', description: 'Entre na sua conta E GUI 404.' },
+      '/auth/register': { title: 'E GUI 404 — Criar conta', description: 'Crie sua conta gratuita no E GUI 404.' },
+      '/auth/login/admin': { title: 'E GUI 404 — Login Administrativo', description: 'Acesso administrativo restrito.' },
       '/education': { title: 'E GUI 404 — Educação em Segurança Digital', description: 'Conteúdos educativos para desenvolver hábitos mais seguros na internet.' },
       '/quiz': { title: 'E GUI 404 — Quiz de Segurança Digital', description: 'Teste seus conhecimentos sobre segurança digital.' },
       '/lab': { title: 'E GUI 404 — Laboratório', description: 'Ferramentas educativas para aprender sobre segurança digital.' },
@@ -164,6 +168,14 @@ export default function App() {
       const urlParams = new URLSearchParams(window.location.search);
       const id = urlParams.get('id') || undefined;
       return <CasesView initialCaseId={id} onNavigate={navigate} language={language} />;
+    }
+
+    if (cleanPath === '/auth/login' || cleanPath === '/auth/register') {
+      return <AuthView mode={cleanPath === '/auth/register' ? 'register' : 'login'} onNavigate={navigate} onAuthenticated={() => navigate('/forum')} />;
+    }
+
+    if (cleanPath === '/auth/login/admin') {
+      return <AdminView onNavigate={navigate} language={language} />;
     }
 
     // Community Forum: /forum or /forum/topic/:slug

@@ -17,6 +17,8 @@ import { AdminAuditLogsView } from '../admin/views/AdminAuditLogsView';
 import { AdminLoginView } from '../admin/views/AdminLoginView';
 import { ScamReportService, AlertService } from '../../services/dataService';
 import { SoundEngine } from '../../services/audioService';
+import { authApi } from '../../services/api/authApi';
+import type { AuthenticatedAccessUser } from '../../services/api/access';
 
 interface AdminViewProps {
   onNavigate: (path: string) => void;
@@ -25,14 +27,21 @@ interface AdminViewProps {
 
 export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) => {
   // Authentication State
-  const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(() => {
-    try {
-      const stored = localStorage.getItem('egui404_admin_session');
-      return stored ? JSON.parse(stored) : { name: 'Comandante de Operações', role: 'SUPER_ADMIN' };
-    } catch {
-      return { name: 'Comandante de Operações', role: 'SUPER_ADMIN' };
-    }
-  });
+  const [currentUser, setCurrentUser] = useState<AuthenticatedAccessUser | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    authApi.getSession(controller.signal).then((user) => {
+      if (controller.signal.aborted) return;
+      const hasAdminRole = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+      setCurrentUser(hasAdminRole ? user : null);
+      setAccessDenied(Boolean(user) && !hasAdminRole);
+      setIsCheckingSession(false);
+    });
+    return () => controller.abort();
+  }, []);
 
   // Current Subroute State
   const [currentSubRoute, setCurrentSubRoute] = useState<string>('dashboard');
@@ -46,19 +55,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) =>
     () => AlertService.getActiveAlerts().length
   );
 
-  const handleLoginSuccess = (user: { name: string; role: string }) => {
+  const handleLoginSuccess = (user: AuthenticatedAccessUser) => {
     setCurrentUser(user);
-    try {
-      localStorage.setItem('egui404_admin_session', JSON.stringify(user));
-    } catch {}
+    setAccessDenied(false);
   };
 
   const handleLogout = () => {
     SoundEngine.playKeyClick();
     setCurrentUser(null);
-    try {
-      localStorage.removeItem('egui404_admin_session');
-    } catch {}
+    void authApi.logout();
   };
 
   const handleNavigateSub = (sub: string) => {
@@ -68,6 +73,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) =>
     }
     setCurrentSubRoute(sub);
   };
+
+  if (isCheckingSession) {
+    return <div className="min-h-[85vh] flex items-center justify-center p-6 font-mono text-xs text-[#888888]">Verificando sessão segura...</div>;
+  }
+
+  if (accessDenied) {
+    return <div className="min-h-[85vh] flex items-center justify-center p-6 font-mono text-center text-xs text-red-300">403 — Acesso administrativo negado.</div>;
+  }
 
   if (!currentUser) {
     return <AdminLoginView onLoginSuccess={handleLoginSuccess} />;
