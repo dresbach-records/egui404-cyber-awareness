@@ -120,8 +120,8 @@ export const ForumView: React.FC<ForumViewProps> = ({
       }
 
       setThreads(fetchedThreads);
-    } catch (err: any) {
-      if (err?.name !== 'AbortError') {
+    } catch (err) {
+      if (!(err instanceof Error && err.name === 'AbortError')) {
         setError('Não foi possível sincronizar o fórum com o servidor.');
       }
     } finally {
