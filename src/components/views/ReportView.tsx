@@ -159,6 +159,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ onNavigate, language }) 
         <p className="text-neutral-400 font-sans text-sm sm:text-base max-w-2xl">
           Envie evidências de abordagens fraudulentas, números suspeitos ou solicite correções em casos documentados. Seus relatos alimentam o repositório público de inteligência contra o cibercrime.
         </p>
+        <p className="text-xs text-neutral-400">
+          Para comunicações institucionais sobre denúncias, utilize <a href="mailto:denuncias@egui404.fun" className="text-white hover:text-[#FF1A1A]">denuncias@egui404.fun</a>.
+        </p>
       </div>
 
       {submittedTicket ? (

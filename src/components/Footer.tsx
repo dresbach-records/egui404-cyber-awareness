@@ -186,6 +186,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
             </ul>
           </div>
 
+          {/* Institutional Contacts */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-widest border-l-2 border-neutral-700 pl-2">
+              Contato institucional
+            </h4>
+            <div className="flex flex-col gap-2 text-xs font-sans">
+              <a href="mailto:contato@egui404.fun" className="hover:text-white transition-colors">contato@egui404.fun</a>
+              <a href="mailto:suporte@egui404.fun" className="hover:text-white transition-colors">suporte@egui404.fun</a>
+              <a href="mailto:seguranca@egui404.fun" className="hover:text-white transition-colors">seguranca@egui404.fun</a>
+              <a href="mailto:denuncias@egui404.fun" className="hover:text-white transition-colors">denuncias@egui404.fun</a>
+              <a href="mailto:privacidade@egui404.fun" className="hover:text-white transition-colors">privacidade@egui404.fun</a>
+            </div>
+          </div>
+
           {/* Newsletter Signal Report */}
           <div className="space-y-3">
             <h4 className="text-xs font-bold text-white uppercase tracking-widest border-l-2 border-[#E00000] pl-2 flex items-center gap-1.5">
@@ -194,6 +208,9 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate, language }) => {
             </h4>
             <p className="text-xs text-neutral-400 font-sans">
               Receba alertas de novos golpes e boletins de inteligência digital.
+            </p>
+            <p className="text-xs text-neutral-300 font-sans">
+              Acompanhe o E GUI 404 pelo SIGNAL: <strong className="text-white">@egui404.fun</strong>
             </p>
 
             {subscribed ? (

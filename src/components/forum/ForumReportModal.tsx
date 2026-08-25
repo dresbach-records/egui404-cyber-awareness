@@ -28,14 +28,13 @@ export const ForumReportModal: React.FC<ForumReportModalProps> = ({
 
     try {
       if (targetType === 'THREAD') {
-        await forumApi.reportThread(targetId, reason, details).catch(() => {});
+        await forumApi.reportThread(targetId, { reason, details }).catch(() => {});
       } else {
         await reportsApi.submitReport({
-          targetType: 'FORUM_POST',
-          targetId,
-          targetTitle: targetTitle || 'Post do Fórum',
-          reason,
-          details
+          title: targetTitle || 'Post do Fórum',
+          category: 'OTHER',
+          platform: 'Fórum E GUI 404',
+          description: `${reason}: ${details}`
         }).catch(() => {});
       }
     } catch {}
