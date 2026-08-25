@@ -23,8 +23,8 @@ export const AlertsView: React.FC<AlertsViewProps> = ({ onNavigate, language }) 
     try {
       const res = await alertsApi.getAlerts({}, signal);
       setAlerts(res.data || []);
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message || 'Falha ao carregar boletins de alerta.');
       }
     } finally {

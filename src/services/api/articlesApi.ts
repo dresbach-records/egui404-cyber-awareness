@@ -5,7 +5,7 @@ import { PaginationMeta } from './types';
 export interface ArticleQueryParams {
   search?: string;
   category?: string;
-  status?: 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED' | string;
+  status?: 'DRAFT' | 'REVIEW' | 'PUBLISHED' | 'ARCHIVED';
   author?: string;
   page?: number;
   limit?: number;
@@ -13,12 +13,13 @@ export interface ArticleQueryParams {
 
 export const articlesApi = {
   getArticles: async (params?: ArticleQueryParams, signal?: AbortSignal): Promise<{ data: EducationArticle[]; meta?: PaginationMeta }> => {
-    const res = await apiClient.get<any>('/articles', { params, signal });
+    const res = await apiClient.get<unknown>('/articles', { params: params as object, signal });
+    const payload = res as { data?: unknown; meta?: PaginationMeta };
 
-    if (res && 'data' in res && Array.isArray(res.data)) {
+    if (Array.isArray(payload.data)) {
       return {
-        data: res.data as EducationArticle[],
-        meta: res.meta
+        data: payload.data as EducationArticle[],
+        meta: payload.meta
       };
     }
 
@@ -33,8 +34,9 @@ export const articlesApi = {
   },
 
   getArticleBySlug: async (slugOrId: string, signal?: AbortSignal): Promise<EducationArticle> => {
-    const res = await apiClient.get<any>(`/articles/${encodeURIComponent(slugOrId)}`, { signal });
-    return (res && 'data' in res ? res.data : res) as EducationArticle;
+    const res = await apiClient.get<unknown>(`/articles/${encodeURIComponent(slugOrId)}`, { signal });
+    const payload = res as { data?: unknown };
+    return (payload.data ?? res) as EducationArticle;
   },
 
   createArticle: async (article: Partial<EducationArticle>): Promise<EducationArticle> => {

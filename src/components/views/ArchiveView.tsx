@@ -89,8 +89,8 @@ export const ArchiveView: React.FC<ArchiveViewProps> = ({ initialSlug, onNavigat
 
       const res = await scamsApi.getScams(params, signal);
       setScams(res.data || []);
-    } catch (err: any) {
-      if (err.name !== 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') {
         setError(err.message || 'Não foi possível carregar o arquivo de ameaças.');
       }
     } finally {

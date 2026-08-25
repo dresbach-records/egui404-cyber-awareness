@@ -19,12 +19,13 @@ export interface ScamQueryParams {
 
 export const scamsApi = {
   getScams: async (params?: ScamQueryParams, signal?: AbortSignal): Promise<{ data: ScamItem[]; meta?: PaginationMeta }> => {
-    const res = await apiClient.get<any>('/scams', { params, signal });
+    const res = await apiClient.get<unknown>('/scams', { params: params as object, signal });
+    const payload = res as { data?: unknown; meta?: PaginationMeta };
 
-    if (res && 'data' in res && Array.isArray(res.data)) {
+    if (Array.isArray(payload.data)) {
       return {
-        data: res.data as ScamItem[],
-        meta: res.meta
+        data: payload.data as ScamItem[],
+        meta: payload.meta
       };
     }
 
@@ -39,8 +40,9 @@ export const scamsApi = {
   },
 
   getScamBySlug: async (slugOrId: string, signal?: AbortSignal): Promise<ScamItem> => {
-    const res = await apiClient.get<any>(`/scams/${encodeURIComponent(slugOrId)}`, { signal });
-    return (res && 'data' in res ? res.data : res) as ScamItem;
+    const res = await apiClient.get<unknown>(`/scams/${encodeURIComponent(slugOrId)}`, { signal });
+    const payload = res as { data?: unknown };
+    return (payload.data ?? res) as ScamItem;
   },
 
   createScam: async (scam: Partial<ScamItem>): Promise<ScamItem> => {
