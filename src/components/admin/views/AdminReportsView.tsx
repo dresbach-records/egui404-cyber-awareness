@@ -17,10 +17,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { ReportSubmission, ScamItem, ScamCategory } from '../../../types';
-import { ScamReportService, ScamService } from '../../../services/dataService';
 import { reportsApi } from '../../../services/api/reportsApi';
 import { scamsApi } from '../../../services/api/scamsApi';
-import { AuditLogService } from '../../../services/adminService';
 import { SoundEngine } from '../../../services/audioService';
 
 export const AdminReportsView: React.FC = () => {
@@ -40,9 +38,10 @@ export const AdminReportsView: React.FC = () => {
         signal
       );
       setReports(res.data || []);
-    } catch {
-      // Fallback for offline mode
-      setReports(ScamReportService.getAllReports());
+    } catch (requestError) {
+      if (!signal?.aborted) {
+        setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar as denúncias.');
+      }
     } finally {
       if (!signal?.aborted) {
         setLoading(false);
@@ -73,21 +72,13 @@ export const AdminReportsView: React.FC = () => {
   const handleUpdateStatus = async (ticketId: string, status: ReportSubmission['status']) => {
     SoundEngine.playKeyClick();
     try {
-      await reportsApi.updateReportStatus(ticketId, status);
-    } catch {}
-
-    ScamReportService.updateReportStatus(ticketId, status);
-    setReports((prev) => prev.map((r) => (r.ticketId === ticketId ? { ...r, status } : r)));
-
-    AuditLogService.log({
-      user: 'moderator_triage',
-      action: 'MODERATION',
-      entity: 'REPORT_SUBMISSION',
-      entityId: ticketId,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: `Status da denúncia [${ticketId}] alterado para ${status}`
-    });
+      const updated = await reportsApi.updateReportStatus(ticketId, status);
+      setReports((prev) => prev.map((r) => (r.ticketId === ticketId ? updated : r)));
+      if (inspectingReport?.ticketId === ticketId) setInspectingReport(updated);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível atualizar o status da denúncia.');
+      return;
+    }
 
     if (inspectingReport?.ticketId === ticketId) {
       setInspectingReport({ ...inspectingReport, status });
@@ -127,20 +118,10 @@ export const AdminReportsView: React.FC = () => {
 
     try {
       await scamsApi.createScam(newScam);
-    } catch {}
-
-    ScamService.saveScam(newScam);
-    await handleUpdateStatus(report.ticketId, 'APPROVED');
-
-    AuditLogService.log({
-      user: 'moderator_triage',
-      action: 'PUBLISH',
-      entity: 'SCAM_ARCHIVE',
-      entityId: newScam.id,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: `Denúncia [${report.ticketId}] convertida em dossiê defensivo no Arquivo.`
-    });
+      await handleUpdateStatus(report.ticketId, 'APPROVED');
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível publicar o relato no arquivo.');
+    }
   };
 
   return (

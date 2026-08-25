@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   MessageSquare,
   Search,
@@ -15,22 +15,32 @@ import {
   Shield
 } from 'lucide-react';
 import { ForumThread } from '../../../types';
-import { FORUM_THREADS, FORUM_CATEGORIES } from '../../../data/forumData';
-import { AuditLogService } from '../../../services/adminService';
+import { forumApi } from '../../../services/api/forumApi';
 import { SoundEngine } from '../../../services/audioService';
 
 export const AdminForumView: React.FC = () => {
-  const [threads, setThreads] = useState<ForumThread[]>(() => {
-    try {
-      const stored = localStorage.getItem('egui404_forum_threads');
-      return stored ? JSON.parse(stored) : FORUM_THREADS;
-    } catch {
-      return FORUM_THREADS;
-    }
-  });
-
+  const [threads, setThreads] = useState<ForumThread[]>([]);
+  const [categories, setCategories] = useState<{ id: string; slug: string; title: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+
+  const loadThreads = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [threadResponse, categoryResponse] = await Promise.all([forumApi.getThreads({ limit: 100 }), forumApi.getCategories()]);
+      setThreads(threadResponse.data);
+      setCategories(categoryResponse);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível carregar os tópicos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void loadThreads(); }, []);
 
   const filteredThreads = threads.filter((t) => {
     if (selectedCategory !== 'ALL' && t.categorySlug !== selectedCategory) return false;
@@ -45,62 +55,34 @@ export const AdminForumView: React.FC = () => {
     return true;
   });
 
-  const saveThreads = (list: ForumThread[]) => {
-    setThreads(list);
+  const handleTogglePin = async (thread: ForumThread) => {
+    SoundEngine.playKeyClick();
     try {
-      localStorage.setItem('egui404_forum_threads', JSON.stringify(list));
-    } catch {}
+      const updated = await forumApi.pinThread(thread.id, !thread.isPinned);
+      setThreads((current) => current.map((item) => item.id === thread.id ? updated : item));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível fixar o tópico.');
+    }
   };
 
-  const handleTogglePin = (id: string) => {
+  const handleToggleLock = async (thread: ForumThread) => {
     SoundEngine.playKeyClick();
-    const updated = threads.map((t) => (t.id === id ? { ...t, isPinned: !t.isPinned } : t));
-    saveThreads(updated);
-    AuditLogService.log({
-      user: 'moderator',
-      action: 'MODERATION',
-      entity: 'FORUM_THREAD',
-      entityId: id,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: 'Status de fixação do tópico alterado.'
-    });
+    try {
+      const updated = await forumApi.lockThread(thread.id, thread.status !== 'LOCKED');
+      setThreads((current) => current.map((item) => item.id === thread.id ? updated : item));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível alterar o bloqueio.');
+    }
   };
 
-  const handleToggleLock = (id: string) => {
-    SoundEngine.playKeyClick();
-    const updated = threads.map((t) => {
-      if (t.id === id) {
-        const nextStatus = t.status === 'LOCKED' ? 'OPEN' : 'LOCKED';
-        return { ...t, status: nextStatus as any };
-      }
-      return t;
-    });
-    saveThreads(updated);
-    AuditLogService.log({
-      user: 'moderator',
-      action: 'MODERATION',
-      entity: 'FORUM_THREAD',
-      entityId: id,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: 'Status de bloqueio do tópico alterado.'
-    });
-  };
-
-  const handleDeleteThread = (id: string) => {
+  const handleDeleteThread = async (id: string) => {
     SoundEngine.playAlertSound();
-    const updated = threads.filter((t) => t.id !== id);
-    saveThreads(updated);
-    AuditLogService.log({
-      user: 'moderator',
-      action: 'DELETE',
-      entity: 'FORUM_THREAD',
-      entityId: id,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: `Tópico do fórum ID ${id} excluído por moderação.`
-    });
+    try {
+      await forumApi.deleteThread(id);
+      setThreads((current) => current.filter((thread) => thread.id !== id));
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível excluir o tópico.');
+    }
   };
 
   return (
@@ -133,13 +115,20 @@ export const AdminForumView: React.FC = () => {
           className="bg-[#141414] border border-[#262626] rounded-lg px-3 py-2 text-xs font-mono text-[#CCCCCC] focus:border-[#E00000] focus:outline-none"
         >
           <option value="ALL">Todas as Categorias</option>
-          {FORUM_CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <option key={c.id} value={c.slug}>
               {c.title}
             </option>
           ))}
         </select>
       </div>
+
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-xs text-red-300">
+          <span>{error}</span>
+          <button type="button" onClick={() => void loadThreads()} className="underline">Tentar novamente</button>
+        </div>
+      )}
 
       {/* Threads Table */}
       <div className="rounded-xl bg-[#0D0D0D] border border-[#222222] overflow-hidden">
@@ -156,7 +145,11 @@ export const AdminForumView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1A1A1A]">
-              {filteredThreads.map((t) => (
+              {loading ? (
+                <tr><td colSpan={6} className="p-8 text-center text-[#888888]">Carregando tópicos do backend...</td></tr>
+              ) : filteredThreads.length === 0 ? (
+                <tr><td colSpan={6} className="p-8 text-center text-[#888888]">Nenhum tópico encontrado.</td></tr>
+              ) : filteredThreads.map((t) => (
                 <tr key={t.id} className="hover:bg-[#121212] transition-colors">
                   <td className="p-3.5 max-w-sm">
                     <div className="flex items-center gap-1.5 font-semibold text-white">
@@ -190,7 +183,7 @@ export const AdminForumView: React.FC = () => {
                   <td className="p-3.5 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-1.5">
                       <button
-                        onClick={() => handleTogglePin(t.id)}
+                        onClick={() => void handleTogglePin(t)}
                         className={`p-1.5 rounded transition-colors ${
                           t.isPinned ? 'bg-red-500/20 text-[#FF1A1A]' : 'text-[#777777] hover:text-white hover:bg-[#222222]'
                         }`}
@@ -199,7 +192,7 @@ export const AdminForumView: React.FC = () => {
                         <Pin className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleToggleLock(t.id)}
+                        onClick={() => void handleToggleLock(t)}
                         className={`p-1.5 rounded transition-colors ${
                           t.status === 'LOCKED'
                             ? 'bg-amber-500/20 text-amber-400'
@@ -210,7 +203,7 @@ export const AdminForumView: React.FC = () => {
                         {t.status === 'LOCKED' ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
                       </button>
                       <button
-                        onClick={() => handleDeleteThread(t.id)}
+                        onClick={() => void handleDeleteThread(t.id)}
                         className="p-1.5 rounded text-[#777777] hover:text-red-400 hover:bg-[#222222]"
                         title="Excluir Tópico"
                       >

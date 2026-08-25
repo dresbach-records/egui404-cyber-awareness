@@ -26,7 +26,7 @@ import { SoundEngine } from '../../services/audioService';
 interface ForumThreadDetailProps {
   thread: ForumThread;
   posts: ForumPost[];
-  currentMember: ForumMember;
+  currentMember?: ForumMember | null;
   onBack: () => void;
   onRefresh: () => void;
   onOpenReportModal: (targetType: 'THREAD' | 'POST', targetId: string, title: string) => void;
@@ -51,8 +51,8 @@ export const ForumThreadDetail: React.FC<ForumThreadDetailProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  const isThreadAuthor = thread.authorId === currentMember.id;
-  const isModOrAdmin = currentMember.role === 'ADMIN' || currentMember.role === 'MODERATOR';
+  const isThreadAuthor = Boolean(currentMember && thread.authorId === currentMember.id);
+  const isModOrAdmin = currentMember?.role === 'ADMIN' || currentMember?.role === 'MODERATOR';
 
   const handleLikeThread = async () => {
     SoundEngine.playClickSound();

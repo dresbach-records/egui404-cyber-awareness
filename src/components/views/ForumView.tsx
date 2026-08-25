@@ -30,7 +30,6 @@ import {
   ForumPost,
   ForumNotification
 } from '../../types';
-import { ForumService } from '../../services/dataService';
 import { forumApi } from '../../services/api/forumApi';
 import { notificationsApi } from '../../services/api/notificationsApi';
 import { authApi } from '../../services/api/authApi';
@@ -82,13 +81,33 @@ export const ForumView: React.FC<ForumViewProps> = ({
 
   // Service Data State
   const [categories, setCategories] = useState<ForumCategory[]>([]);
-  const [tags, setTags] = useState<ForumTag[]>([]);
   const [threads, setThreads] = useState<ForumThread[]>([]);
   const [activeThreadPosts, setActiveThreadPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<AuthenticatedAccessUser | null>(null);
-  const [currentMember, setCurrentMember] = useState<ForumMember>(ForumService.getMembers()[0]);
+  const currentMember = useMemo<ForumMember | null>(() => {
+    if (!currentUser) return null;
+    return {
+      id: currentUser.id,
+      username: currentUser.username || currentUser.email || currentUser.id,
+      displayName: currentUser.name || currentUser.username || currentUser.email || 'Usuário autenticado',
+      role: currentUser.role || 'MEMBER',
+      bio: '',
+      joinedDate: currentUser.createdAt || new Date().toISOString(),
+      reputation: 0,
+      threadsCount: 0,
+      repliesCount: 0,
+      solutionsCount: 0,
+      badges: []
+    };
+  }, [currentUser]);
+
+  const tags = useMemo<ForumTag[]>(() => {
+    const counts = new Map<string, number>();
+    threads.forEach((thread) => thread.tags.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1)));
+    return Array.from(counts, ([slug, count]) => ({ slug, name: slug, count }));
+  }, [threads]);
 
   // Dados operacionais do fórum vêm exclusivamente da API oficial.
   const fetchForumData = useCallback(async (signal?: AbortSignal) => {
@@ -98,8 +117,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
       const cats = await forumApi.getCategories(signal);
       setCategories(cats);
 
-      // Tags permanecem parte da configuração editorial do fórum; notificações vêm da API.
-      setTags(ForumService.getTags());
+      // Tags são derivadas dos tópicos retornados pelo backend; notificações vêm da API.
       const fetchedNotifications = await notificationsApi.getNotifications(signal);
       setNotifications(fetchedNotifications);
 
@@ -203,10 +221,10 @@ export const ForumView: React.FC<ForumViewProps> = ({
   };
 
   const handleOpenUserProfile = (username: string) => {
-    const member = ForumService.getMemberByUsername(username);
-    if (member) {
-      setSelectedMemberForModal(member);
-    }
+    const member = threads
+      .flatMap((thread) => [thread.author, ...activeThreadPosts.map((post) => post.author)])
+      .find((candidate) => candidate.username === username);
+    if (member) setSelectedMemberForModal(member);
   };
 
   return (
