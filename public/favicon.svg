@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <rect width="100" height="100" fill="#050505" rx="16"/>
+  <rect x="2" y="2" width="96" height="96" fill="none" stroke="#E00000" stroke-width="2" stroke-opacity="0.4" rx="14"/>
+  <!-- Cyber grid marks -->
+  <line x1="10" y1="20" x2="20" y2="20" stroke="#E00000" stroke-width="2"/>
+  <line x1="10" y1="20" x2="10" y2="30" stroke="#E00000" stroke-width="2"/>
+  <line x1="90" y1="20" x2="80" y2="20" stroke="#E00000" stroke-width="2"/>
+  <line x1="90" y1="20" x2="90" y2="30" stroke="#E00000" stroke-width="2"/>
+  <line x1="10" y1="80" x2="20" y2="80" stroke="#E00000" stroke-width="2"/>
+  <line x1="10" y1="80" x2="10" y2="70" stroke="#E00000" stroke-width="2"/>
+  <line x1="90" y1="80" x2="80" y2="80" stroke="#E00000" stroke-width="2"/>
+  <line x1="90" y1="80" x2="90" y2="70" stroke="#E00000" stroke-width="2"/>
+  
+  <!-- Red square accent dots (as seen in brand guideline) -->
+  <rect x="26" y="22" width="6" height="6" fill="#E00000"/>
+  <rect x="34" y="22" width="6" height="6" fill="#E00000"/>
+
+  <!-- Main Kan/Chinese Glyph: 恶鬼 (E GUI) stylized -->
+  <text x="50" y="58" font-family="'JetBrains Mono', monospace, sans-serif" font-weight="900" font-size="28" fill="#F5F5F5" text-anchor="middle">恶鬼</text>
+  
+  <!-- Subtext 404 -->
+  <text x="50" y="76" font-family="'JetBrains Mono', monospace, sans-serif" font-weight="800" font-size="14" fill="#FF1A1A" letter-spacing="3" text-anchor="middle">404</text>
+  
+  <!-- Scanner bar -->
+  <line x1="20" y1="84" x2="80" y2="84" stroke="#E00000" stroke-width="1.5" stroke-dasharray="4, 2"/>
+</svg>

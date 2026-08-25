@@ -1,0 +1,215 @@
+import React, { useState, useEffect } from 'react';
+import { Navbar } from './components/Navbar';
+import { Footer } from './components/Footer';
+import { CommandPalette } from './components/ui/CommandPalette';
+import { CookieBanner } from './components/ui/CookieBanner';
+import { HomeView } from './components/views/HomeView';
+import { ArchiveView } from './components/views/ArchiveView';
+import { ThreatsView } from './components/views/ThreatsView';
+import { CasesView } from './components/views/CasesView';
+import { EducationView } from './components/views/EducationView';
+import { QuizView } from './components/views/QuizView';
+import { LabView } from './components/views/LabView';
+import { AboutView } from './components/views/AboutView';
+import { ReportView } from './components/views/ReportView';
+import { ContactView } from './components/views/ContactView';
+import { AlertsView } from './components/views/AlertsView';
+import { AdminView } from './components/views/AdminView';
+import { LegalView } from './components/views/LegalViews';
+import { NotFoundView } from './components/views/NotFoundView';
+import { SoundEngine } from './services/audioService';
+
+export default function App() {
+  // Navigation State
+  const [currentPath, setCurrentPath] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname || '/';
+      return path === '' ? '/' : path;
+    }
+    return '/';
+  });
+
+  // Global App State
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [language, setLanguage] = useState<'pt' | 'en'>('pt');
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  // Sync with browser history
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname || '/');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Global Keyboard shortcuts (Cmd+K / Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        SoundEngine.playKeyClick();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const navigate = (path: string) => {
+    if (path !== currentPath) {
+      window.history.pushState({}, '', path);
+      setCurrentPath(path);
+      window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+    }
+  };
+
+  const toggleSound = () => {
+    const nextState = !soundEnabled;
+    setSoundEnabled(nextState);
+    SoundEngine.setEnabled(nextState);
+    if (nextState) {
+      SoundEngine.playSuccessSound();
+    }
+  };
+
+  const toggleReducedMotion = () => {
+    setReducedMotion((prev) => !prev);
+  };
+
+  const toggleLanguage = () => {
+    SoundEngine.playKeyClick();
+    setLanguage((prev) => (prev === 'pt' ? 'en' : 'pt'));
+  };
+
+  // Route Resolver
+  const renderView = () => {
+    const cleanPath = currentPath.split('?')[0];
+
+    // Home
+    if (cleanPath === '/' || cleanPath === '') {
+      return <HomeView onNavigate={navigate} language={language} />;
+    }
+
+    // Scam Archive with potential slug: /archive or /archive/:slug
+    if (cleanPath === '/archive' || cleanPath.startsWith('/archive/')) {
+      const slug = cleanPath.startsWith('/archive/') ? cleanPath.replace('/archive/', '') : undefined;
+      return <ArchiveView initialSlug={slug} onNavigate={navigate} language={language} />;
+    }
+
+    // Threat Intelligence Matrix
+    if (cleanPath === '/threats') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id') || undefined;
+      return <ThreatsView initialThreatId={id} onNavigate={navigate} language={language} />;
+    }
+
+    // Case Files Dossiers
+    if (cleanPath === '/cases') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('id') || undefined;
+      return <CasesView initialCaseId={id} onNavigate={navigate} language={language} />;
+    }
+
+    // Cyber Education with potential slug: /education or /education/:slug
+    if (cleanPath === '/education' || cleanPath.startsWith('/education/')) {
+      const slug = cleanPath.startsWith('/education/') ? cleanPath.replace('/education/', '') : undefined;
+      return <EducationView initialSlug={slug} onNavigate={navigate} language={language} />;
+    }
+
+    // Interactive Quiz / Simulator
+    if (cleanPath === '/quiz') {
+      return <QuizView onNavigate={navigate} language={language} />;
+    }
+
+    // Cyber Lab
+    if (cleanPath === '/lab') {
+      return <LabView onNavigate={navigate} language={language} />;
+    }
+
+    // About & Philosophy
+    if (cleanPath === '/about') {
+      return <AboutView onNavigate={navigate} language={language} />;
+    }
+
+    // Whistleblower Report
+    if (cleanPath === '/report') {
+      return <ReportView onNavigate={navigate} language={language} />;
+    }
+
+    // Contact
+    if (cleanPath === '/contact') {
+      return <ContactView onNavigate={navigate} language={language} />;
+    }
+
+    // Scam Alerts Feed
+    if (cleanPath === '/alerts') {
+      return <AlertsView onNavigate={navigate} language={language} />;
+    }
+
+    // Admin Cockpit Preview
+    if (cleanPath === '/admin') {
+      return <AdminView onNavigate={navigate} language={language} />;
+    }
+
+    // Legal & Governance Pages
+    if (cleanPath === '/privacy') {
+      return <LegalView type="privacy" onNavigate={navigate} language={language} />;
+    }
+    if (cleanPath === '/terms') {
+      return <LegalView type="terms" onNavigate={navigate} language={language} />;
+    }
+    if (cleanPath === '/cookies') {
+      return <LegalView type="cookies" onNavigate={navigate} language={language} />;
+    }
+    if (cleanPath === '/editorial-policy') {
+      return <LegalView type="editorial-policy" onNavigate={navigate} language={language} />;
+    }
+    if (cleanPath === '/disclaimer') {
+      return <LegalView type="disclaimer" onNavigate={navigate} language={language} />;
+    }
+
+    // 404 Fallback
+    return <NotFoundView onNavigate={navigate} language={language} />;
+  };
+
+  return (
+    <div
+      className={`min-h-screen bg-[#050505] text-[#F5F5F5] selection:bg-[#E00000] selection:text-white flex flex-col ${
+        reducedMotion ? '' : 'scanline-overlay'
+      }`}
+    >
+      {/* Top Navbar */}
+      <Navbar
+        currentPath={currentPath}
+        onNavigate={navigate}
+        onOpenSearch={() => setSearchOpen(true)}
+        reducedMotion={reducedMotion}
+        onToggleReducedMotion={toggleReducedMotion}
+        soundEnabled={soundEnabled}
+        onToggleSound={toggleSound}
+        language={language}
+        onToggleLanguage={toggleLanguage}
+      />
+
+      {/* Main Content Stage */}
+      <main className="flex-1">
+        {renderView()}
+      </main>
+
+      {/* Global Command Palette (⌘K) */}
+      <CommandPalette
+        isOpen={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onNavigate={navigate}
+      />
+
+      {/* LGPD Cookie & Privacy Banner */}
+      <CookieBanner onNavigateLegal={navigate} />
+
+      {/* Footer */}
+      <Footer onNavigate={navigate} language={language} />
+    </div>
+  );
+}

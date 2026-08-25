@@ -1,0 +1,17 @@
+{
+  "name": "E GUI 404 — Cyber Crime Awareness",
+  "short_name": "EGUI404",
+  "description": "Plataforma de Scam Intelligence, Cyber Crime Awareness e Digital Safety. Expose. Educate. Protect.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
