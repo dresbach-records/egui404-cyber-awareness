@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Users,
   Search,
@@ -15,11 +15,27 @@ import {
   Mail
 } from 'lucide-react';
 import { AdminMemberItem, AdminSourceItem } from '../../../types';
-import { AdminMemberService, AdminSourcesService, AuditLogService } from '../../../services/adminService';
+import { AdminSourcesService } from '../../../services/adminService';
+import { usersApi } from '../../../services/api/usersApi';
 import { SoundEngine } from '../../../services/audioService';
 
 export const AdminMembersView: React.FC = () => {
-  const [members, setMembers] = useState<AdminMemberItem[]>(() => AdminMemberService.getAll());
+  const [members, setMembers] = useState<AdminMemberItem[]>([]);
+  const [membersError, setMembersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    usersApi.getUsers({ limit: 100 }).then(({ data }) => {
+      setMembers(data.map((user) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        status: 'ACTIVE',
+        mfaEnabled: false,
+        lastLogin: 'Não informado'
+      })));
+    }).catch((error) => setMembersError(error instanceof Error ? error.message : 'Não foi possível carregar os membros.'));
+  }, []);
   const [search, setSearch] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<AdminMemberItem | null>(null);
@@ -70,35 +86,20 @@ export const AdminMembersView: React.FC = () => {
       lastLogin: formData.lastLogin || 'Nunca'
     };
 
-    AdminMemberService.save(finalMember);
-    setMembers(AdminMemberService.getAll());
-
-    AuditLogService.log({
-      user: 'super_admin',
-      action: editingMember ? 'UPDATE' : 'CREATE',
-      entity: 'SECURITY_STAFF',
-      entityId: finalMember.id,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: `Permissões de membro salvas: ${finalMember.name} (${finalMember.role})`
-    });
+    if (!editingMember) {
+      setMembersError('Criação de operadores ainda não está disponível no contrato do backend.');
+      return;
+    }
+    void usersApi.updateUserRole(finalMember.id, finalMember.role).then(() => {
+      setMembers((current) => current.map((member) => member.id === finalMember.id ? finalMember : member));
+    }).catch((error) => setMembersError(error instanceof Error ? error.message : 'Não foi possível atualizar o cargo.'));
 
     setIsModalOpen(false);
   };
 
   const handleDelete = (id: string) => {
     SoundEngine.playAlertSound();
-    AdminMemberService.delete(id);
-    setMembers(AdminMemberService.getAll());
-    AuditLogService.log({
-      user: 'super_admin',
-      action: 'DELETE',
-      entity: 'SECURITY_STAFF',
-      entityId: id,
-      ip: '127.0.0.1',
-      result: 'SUCCESS',
-      details: `Membro ID ${id} removido da equipe.`
-    });
+    setMembersError('A exclusão de operadores não está disponível no contrato do backend.');
   };
 
   return (
@@ -121,6 +122,8 @@ export const AdminMembersView: React.FC = () => {
           <span>Novo Operador</span>
         </button>
       </div>
+
+      {membersError && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-xs font-mono">{membersError}</div>}
 
       {/* Search Bar */}
       <div className="p-4 rounded-xl bg-[#0D0D0D] border border-[#222222]">
