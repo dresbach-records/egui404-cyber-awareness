@@ -31,6 +31,7 @@ import {
 } from '../../types';
 import { ForumService } from '../../services/dataService';
 import { forumApi } from '../../services/api/forumApi';
+import { notificationsApi } from '../../services/api/notificationsApi';
 import { SoundEngine } from '../../services/audioService';
 import { ForumThreadCard } from '../forum/ForumThreadCard';
 import { ForumThreadDetail } from '../forum/ForumThreadDetail';
@@ -101,9 +102,10 @@ export const ForumView: React.FC<ForumViewProps> = ({
       }
       setCategories(cats);
 
-      // Fetch tags & notifications locally/synced
+      // Tags permanecem parte da configuração editorial do fórum; notificações vêm da API.
       setTags(ForumService.getTags());
-      setNotifications(ForumService.getNotifications());
+      const fetchedNotifications = await notificationsApi.getNotifications(signal);
+      setNotifications(fetchedNotifications);
 
       // Fetch threads
       const sortParam = activeTab === 'POPULAR' ? 'popular' : activeTab === 'UNSOLVED' ? 'unanswered' : 'recent';
@@ -265,9 +267,10 @@ export const ForumView: React.FC<ForumViewProps> = ({
                     <span className="font-bold text-white uppercase font-tech">Notificações</span>
                     <button
                       type="button"
-                      onClick={() => {
-                        ForumService.markAllNotificationsAsRead();
-                        fetchForumData();
+                      onClick={async () => {
+                        await notificationsApi.markAllAsRead();
+                        const refreshed = await notificationsApi.getNotifications();
+                        setNotifications(refreshed);
                       }}
                       className="text-[10px] text-neutral-500 hover:text-neutral-300"
                     >
@@ -282,8 +285,11 @@ export const ForumView: React.FC<ForumViewProps> = ({
                       notifications.map((notif) => (
                         <div
                           key={notif.id}
-                          onClick={() => {
-                            ForumService.markNotificationAsRead(notif.id);
+                          onClick={async () => {
+                            if (!notif.read) {
+                              await notificationsApi.markAsRead(notif.id);
+                              setNotifications((current) => current.map((item) => item.id === notif.id ? { ...item, read: true } : item));
+                            }
                             setIsNotifsOpen(false);
                             if (notif.threadSlug) handleOpenThread(notif.threadSlug);
                           }}

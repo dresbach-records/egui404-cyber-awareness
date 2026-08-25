@@ -15,6 +15,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -36,6 +37,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
     if (!query.trim()) {
       setResults([]);
+      setError(false);
       setLoading(false);
       return;
     }
@@ -43,6 +45,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
     const controller = new AbortController();
     abortRef.current = controller;
     setLoading(true);
+    setError(false);
 
     const timer = setTimeout(async () => {
       try {
@@ -52,6 +55,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           setResults([]);
+          setError(true);
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -155,11 +159,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose,
 
         {/* Results List */}
         <div className="max-h-96 overflow-y-auto p-2 space-y-1">
-          {results.length === 0 ? (
+          {error ? (
+            <div className="py-12 text-center text-neutral-500">
+              <p role="alert" className="text-sm font-medium text-[#FF6B6B]">Não foi possível realizar a busca.</p>
+              <button type="button" onClick={() => {
+                const currentQuery = query;
+                setQuery('');
+                window.setTimeout(() => setQuery(currentQuery), 0);
+              }} className="text-xs text-neutral-300 hover:text-white mt-3 underline">Tentar novamente</button>
+            </div>
+          ) : results.length === 0 ? (
             <div className="py-12 text-center text-neutral-500">
               <Search className="w-8 h-8 mx-auto mb-2 opacity-40 text-[#E00000]" />
-              <p className="text-sm font-medium">Nenhum registro encontrado para "{query}"</p>
-              <p className="text-xs text-neutral-600 mt-1">Tente pesquisar termos como "Pix", "WhatsApp" ou "Phishing".</p>
+              <p className="text-sm font-medium">{query ? `Nenhum resultado encontrado.` : 'Digite para pesquisar.'}</p>
+              {query && <p className="text-xs text-neutral-600 mt-1">Tente pesquisar termos como "Pix", "WhatsApp" ou "Phishing".</p>}
             </div>
           ) : (
             results.map((item, idx) => {

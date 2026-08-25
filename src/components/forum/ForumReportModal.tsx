@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { X, Flag, AlertTriangle, ShieldCheck } from 'lucide-react';
-import { ForumService } from '../../services/dataService';
-import { forumApi } from '../../services/api/forumApi';
 import { reportsApi } from '../../services/api/reportsApi';
 import { SoundEngine } from '../../services/audioService';
 
@@ -21,37 +19,31 @@ export const ForumReportModal: React.FC<ForumReportModalProps> = ({
   const [reason, setReason] = useState<'SPAM' | 'HARASSMENT' | 'MISINFORMATION' | 'PERSONAL_DATA' | 'MALICIOUS_CONTENT' | 'ILLEGAL_REQUEST' | 'OTHER'>('PERSONAL_DATA');
   const [details, setDetails] = useState('');
   const [isSent, setIsSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     SoundEngine.playClickSound();
 
+    setSubmitting(true);
+    setError(null);
     try {
-      if (targetType === 'THREAD') {
-        await forumApi.reportThread(targetId, { reason, details }).catch(() => {});
-      } else {
-        await reportsApi.submitReport({
-          title: targetTitle || 'Post do Fórum',
-          category: 'OTHER',
-          platform: 'Fórum E GUI 404',
-          description: `${reason}: ${details}`
-        }).catch(() => {});
-      }
-    } catch {}
+      await reportsApi.submitReport({
+        title: targetTitle || `Conteúdo do fórum (${targetType})`,
+        category: 'OTHER',
+        platform: 'Fórum E GUI 404',
+        description: `Alvo: ${targetId}. Motivo: ${reason}. ${details}`
+      });
+      SoundEngine.playSuccessSound();
+      setIsSent(true);
+      setTimeout(() => onClose(), 1800);
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Não foi possível enviar a denúncia.');
+    } finally {
+      setSubmitting(false);
+    }
 
-    ForumService.submitForumReport({
-      targetType,
-      targetId,
-      targetTitle,
-      reporterUsername: 'current_user',
-      reason,
-      details
-    });
-
-    setIsSent(true);
-    setTimeout(() => {
-      onClose();
-    }, 1800);
   };
 
   return (
@@ -90,13 +82,14 @@ export const ForumReportModal: React.FC<ForumReportModalProps> = ({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+            {error && <p role="alert" className="border border-[#7F1D1D] bg-[#2A0D0D] text-[#FF6B6B] rounded px-3 py-2">{error}</p>}
             <div className="space-y-1.5">
               <label className="block font-bold text-neutral-300 uppercase font-tech">
                 Motivo Principal da Denúncia: *
               </label>
               <select
                 value={reason}
-                onChange={(e) => setReason(e.target.value as any)}
+                onChange={(e) => setReason(e.target.value as typeof reason)}
                 className="w-full bg-[#141414] border border-[#282828] focus:border-[#FF1A1A] rounded px-3 py-2 text-white focus:outline-none"
               >
                 <option value="PERSONAL_DATA">Vazamento de dados pessoais (CPF, telefone, documentos)</option>
@@ -132,9 +125,10 @@ export const ForumReportModal: React.FC<ForumReportModalProps> = ({
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 bg-[#E00000] hover:bg-[#b00000] text-white rounded font-tech font-bold uppercase tracking-wider"
+                disabled={submitting}
+                className="px-5 py-2 bg-[#E00000] hover:bg-[#b00000] disabled:opacity-60 disabled:cursor-not-allowed text-white rounded font-tech font-bold uppercase tracking-wider"
               >
-                Enviar Denúncia
+                {submitting ? 'Enviando...' : 'Enviar Denúncia'}
               </button>
             </div>
           </form>
