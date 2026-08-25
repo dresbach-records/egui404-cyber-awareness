@@ -73,6 +73,14 @@ export interface AuthSessionUser {
   role: 'SUPER_ADMIN' | 'ADMIN' | 'ANALYST' | 'MODERATOR' | 'RESEARCHER' | 'MEMBER';
   avatarUrl?: string;
   createdAt?: string;
+  plan?: 'FREE' | 'PREMIUM' | 'BUSINESS' | string;
+  permissions?: string[];
+  subscription?: {
+    status?: string;
+    currentPeriodEnd?: string;
+  } | null;
+  entitlements?: string[];
+  account_type?: string;
 }
 
 export interface AuthSessionResponse {

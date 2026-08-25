@@ -33,6 +33,8 @@ import {
 import { ForumService } from '../../services/dataService';
 import { forumApi } from '../../services/api/forumApi';
 import { notificationsApi } from '../../services/api/notificationsApi';
+import { authApi } from '../../services/api/authApi';
+import { getAccessLabel, type AuthenticatedAccessUser } from '../../services/api/access';
 import { SoundEngine } from '../../services/audioService';
 import { ForumThreadCard } from '../forum/ForumThreadCard';
 import { ForumThreadDetail } from '../forum/ForumThreadDetail';
@@ -85,6 +87,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const [activeThreadPosts, setActiveThreadPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<AuthenticatedAccessUser | null>(null);
   const [currentMember, setCurrentMember] = useState<ForumMember>(ForumService.getMembers()[0]);
 
   // Dados operacionais do fórum vêm exclusivamente da API oficial.
@@ -133,6 +136,9 @@ export const ForumView: React.FC<ForumViewProps> = ({
 
   useEffect(() => {
     const controller = new AbortController();
+    authApi.getSession(controller.signal).then((user) => {
+      if (!controller.signal.aborted) setCurrentUser(user as AuthenticatedAccessUser | null);
+    });
     fetchForumData(controller.signal);
     return () => controller.abort();
   }, [fetchForumData]);
@@ -214,6 +220,11 @@ export const ForumView: React.FC<ForumViewProps> = ({
             <span className="font-bold tracking-widest uppercase">
               E GUI 404 // DEFENSIVE COMMUNITY & THREAT EXCHANGE
             </span>
+            {getAccessLabel(currentUser, language) && (
+              <span className="border border-[#333] px-2 py-0.5 text-[10px] text-neutral-400 tracking-wider">
+                {getAccessLabel(currentUser, language)}
+              </span>
+            )}
           </div>
 
           {/* Quick Actions Header */}
