@@ -8,8 +8,12 @@ const links = [
   { label: 'Início', path: '/forum', Icon: Home },
   { label: 'Populares', path: '/forum/popular', Icon: TrendingUp },
   { label: 'Recentes', path: '/forum/recent', Icon: Compass },
+  { label: 'Em alta', path: '/forum/trending', Icon: TrendingUp },
+  { label: 'Explorar', path: '/forum/explore', Icon: Compass },
   { label: 'Comunidades', path: '/forum/communities', Icon: Users },
+  { label: 'Criar comunidade', path: '/forum/community/create', Icon: Users },
   { label: 'Salvos', path: '/forum/saved', Icon: Bookmark },
+  { label: 'Histórico', path: '/forum/history', Icon: Compass },
   { label: 'Notificações', path: '/forum/notifications', Icon: Bell },
   { label: 'Denúncias', path: '/forum/reports', Icon: Shield },
 ];
