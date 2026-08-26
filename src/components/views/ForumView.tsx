@@ -46,12 +46,14 @@ interface ForumViewProps {
   onNavigate: (path: string) => void;
   language: 'pt' | 'en';
   initialThreadSlug?: string;
+  initialCreate?: boolean;
 }
 
 export const ForumView: React.FC<ForumViewProps> = ({
   onNavigate,
   language,
-  initialThreadSlug
+  initialThreadSlug,
+  initialCreate = false
 }) => {
   // Navigation & Active States
   const [activeCategorySlug, setActiveCategorySlug] = useState<string>('ALL');
@@ -61,7 +63,7 @@ export const ForumView: React.FC<ForumViewProps> = ({
   const [activeThreadSlug, setActiveThreadSlug] = useState<string | null>(initialThreadSlug || null);
 
   // Modals state
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(initialCreate);
   const [isGuidelinesModalOpen, setIsGuidelinesModalOpen] = useState(false);
   const [selectedMemberForModal, setSelectedMemberForModal] = useState<ForumMember | null>(null);
   const [reportModalData, setReportModalData] = useState<{
