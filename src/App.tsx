@@ -235,8 +235,8 @@ export default function App() {
       return <AlertsView onNavigate={navigate} language={language} />;
     }
 
-    // Admin Cockpit Preview
-    if (cleanPath === '/admin') {
+    // Admin Control Center: all administrative routes stay outside public navigation.
+    if (cleanPath === '/admin' || cleanPath.startsWith('/admin/')) {
       return <AdminView onNavigate={navigate} language={language} />;
     }
 
@@ -261,14 +261,16 @@ export default function App() {
     return <NotFoundView onNavigate={navigate} language={language} />;
   };
 
+  const isAdminRoute = currentPath === '/admin' || currentPath.startsWith('/admin/') || currentPath === '/auth/login/admin';
+
   return (
     <div
       className={`min-h-screen bg-[#050505] text-[#F5F5F5] selection:bg-[#E00000] selection:text-white flex flex-col ${
         reducedMotion ? '' : 'scanline-overlay'
       }`}
     >
-      {/* Top Navbar */}
-      <Navbar
+      {/* Public shell is intentionally excluded from the Admin Control Center. */}
+      {!isAdminRoute && <Navbar
         currentPath={currentPath}
         onNavigate={navigate}
         onOpenSearch={() => setSearchOpen(true)}
@@ -278,7 +280,7 @@ export default function App() {
         onToggleSound={toggleSound}
         language={language}
         onToggleLanguage={toggleLanguage}
-      />
+      />}
 
       {/* Main Content Stage */}
       <main className="flex-1">
@@ -286,17 +288,16 @@ export default function App() {
       </main>
 
       {/* Global Command Palette (⌘K) */}
-      <CommandPalette
+      {!isAdminRoute && <CommandPalette
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onNavigate={navigate}
-      />
+      />}
 
       {/* LGPD Cookie & Privacy Banner */}
-      <CookieBanner onNavigateLegal={navigate} />
+      {!isAdminRoute && <CookieBanner onNavigateLegal={navigate} />}
 
-      {/* Footer */}
-      <Footer onNavigate={navigate} language={language} />
+      {!isAdminRoute && <Footer onNavigate={navigate} language={language} />}
     </div>
   );
 }

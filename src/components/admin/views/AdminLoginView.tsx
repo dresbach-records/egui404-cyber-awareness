@@ -5,7 +5,6 @@ import {
   User,
   KeyRound,
   ArrowRight,
-  Fingerprint,
   AlertTriangle,
   Shield,
   Loader2
@@ -23,7 +22,6 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [usePasskey, setUsePasskey] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +45,6 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handlePasskeyAuth = () => {
-    setError('Passkey / FIDO2 ainda não está configurado pelo backend.');
   };
 
   return (
@@ -132,22 +126,6 @@ export const AdminLoginView: React.FC<AdminLoginViewProps> = ({ onLoginSuccess }
             )}
           </button>
         </form>
-
-        <div className="relative flex py-1 items-center">
-          <div className="flex-grow border-t border-[#1C1C1C]"></div>
-          <span className="flex-shrink mx-4 text-[10px] font-mono text-[#555555]">OU</span>
-          <div className="flex-grow border-t border-[#1C1C1C]"></div>
-        </div>
-
-        <button
-          type="button"
-          onClick={handlePasskeyAuth}
-          disabled={isLoading}
-          className="w-full py-3 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[#262626] text-[#CCCCCC] hover:text-white font-mono text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-        >
-          <Fingerprint className="w-4 h-4 text-cyan-400" />
-          <span>Autenticar com Passkey / FIDO2</span>
-        </button>
 
         <div className="text-center text-[10px] font-mono text-[#555555]">
           E GUI 404 SOC • Todos os acessos são auditados e gravados em conformidade com a LGPD
