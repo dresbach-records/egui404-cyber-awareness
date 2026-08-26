@@ -1,18 +1,35 @@
-import React, { useState } from 'react';
-import { Bell, Bookmark, Compass, Home, Menu, Search, TrendingUp, Users, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Bell, Bookmark, Compass, Home, Menu, Search, Shield, TrendingUp, Users, X } from 'lucide-react';
+import { authApi } from '../../services/api/authApi';
 
 interface ForumShellProps { currentPath: string; onNavigate: (path: string) => void; children: React.ReactNode; }
 
 const links = [
   { label: 'Início', path: '/forum', Icon: Home },
+  { label: 'For You', path: '/forum/for-you', Icon: Compass },
   { label: 'Populares', path: '/forum/popular', Icon: TrendingUp },
   { label: 'Recentes', path: '/forum/recent', Icon: Compass },
+  { label: 'Em alta', path: '/forum/trending', Icon: TrendingUp },
+  { label: 'Explorar', path: '/forum/explore', Icon: Compass },
   { label: 'Comunidades', path: '/forum/communities', Icon: Users },
+  { label: 'Criar comunidade', path: '/forum/community/create', Icon: Users },
   { label: 'Salvos', path: '/forum/saved', Icon: Bookmark },
+  { label: 'Histórico', path: '/forum/history', Icon: Compass },
+  { label: 'Notificações', path: '/forum/notifications', Icon: Bell },
+  { label: 'Denúncias', path: '/forum/reports', Icon: Shield },
 ];
 
 export const ForumShell: React.FC<ForumShellProps> = ({ currentPath, onNavigate, children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sessionState, setSessionState] = useState<'checking' | 'authenticated' | 'guest'>('checking');
+  useEffect(() => {
+    const controller = new AbortController();
+    authApi.getSession(controller.signal).then((user) => {
+      if (!controller.signal.aborted) setSessionState(user ? 'authenticated' : 'guest');
+    });
+    return () => controller.abort();
+  }, []);
+  if (sessionState !== 'authenticated') return <>{children}</>;
   const go = (path: string) => { setDrawerOpen(false); onNavigate(path); };
   return (
     <div className="min-h-screen bg-[#070809] text-[#F5F5F5] font-sans">

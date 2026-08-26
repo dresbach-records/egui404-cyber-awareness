@@ -50,8 +50,10 @@ export default function App() {
       '/threats': { title: 'E GUI 404 — Ameaças Digitais', description: 'Informação pública para reconhecer e compreender ameaças digitais.' },
       '/cases': { title: 'E GUI 404 — Casos Reais de Fraudes Digitais', description: 'Casos documentados para educação e conscientização sobre fraudes digitais.' },
       '/forum': { title: 'E GUI 404 — Fórum Privado', description: 'Área comunitária privada do E GUI 404.' },
-      '/auth/login': { title: 'E GUI 404 — Entrar', description: 'Entre na sua conta E GUI 404.' },
-      '/auth/register': { title: 'E GUI 404 — Criar conta', description: 'Crie sua conta gratuita no E GUI 404.' },
+      '/auth/login': { title: 'E GUI 404 Community — Entrar', description: 'Entre na sua conta da comunidade E GUI 404.' },
+      '/auth/register': { title: 'E GUI 404 Community — Criar conta', description: 'Crie sua conta gratuita na comunidade E GUI 404.' },
+      '/auth/forgot-password': { title: 'E GUI 404 Community — Recuperar senha', description: 'Recuperação de acesso da comunidade E GUI 404.' },
+      '/auth/reset-password': { title: 'E GUI 404 Community — Redefinir senha', description: 'Redefinição de senha da comunidade E GUI 404.' },
       '/auth/login/admin': { title: 'E GUI 404 — Login Administrativo', description: 'Acesso administrativo restrito.' },
       '/education': { title: 'E GUI 404 — Educação em Segurança Digital', description: 'Conteúdos educativos para desenvolver hábitos mais seguros na internet.' },
       '/quiz': { title: 'E GUI 404 — Quiz de Segurança Digital', description: 'Teste seus conhecimentos sobre segurança digital.' },
@@ -172,8 +174,9 @@ export default function App() {
       return <CasesView initialCaseId={id} onNavigate={navigate} language={language} />;
     }
 
-    if (cleanPath === '/auth/login' || cleanPath === '/auth/register') {
-      return <AuthView mode={cleanPath === '/auth/register' ? 'register' : 'login'} onNavigate={navigate} onAuthenticated={() => navigate('/forum')} />;
+    if (cleanPath === '/auth/login' || cleanPath === '/auth/register' || cleanPath === '/auth/forgot-password' || cleanPath === '/auth/reset-password') {
+      const mode = cleanPath === '/auth/register' ? 'register' : cleanPath === '/auth/forgot-password' ? 'forgot' : cleanPath === '/auth/reset-password' ? 'reset' : 'login';
+      return <AuthView mode={mode} onNavigate={navigate} onAuthenticated={() => navigate('/forum')} />;
     }
 
     if (cleanPath === '/auth/login/admin') {
@@ -264,6 +267,7 @@ export default function App() {
 
   const isAdminRoute = currentPath === '/admin' || currentPath.startsWith('/admin/') || currentPath === '/auth/login/admin';
   const isForumRoute = currentPath === '/forum' || currentPath.startsWith('/forum/');
+  const isCommunityAuthRoute = currentPath === '/auth/login' || currentPath === '/auth/register' || currentPath === '/auth/forgot-password' || currentPath === '/auth/reset-password';
 
   return (
     <div
@@ -272,7 +276,7 @@ export default function App() {
       }`}
     >
       {/* Public shell is intentionally excluded from the Admin Control Center. */}
-      {!isAdminRoute && !isForumRoute && <Navbar
+      {!isAdminRoute && !isForumRoute && !isCommunityAuthRoute && <Navbar
         currentPath={currentPath}
         onNavigate={navigate}
         onOpenSearch={() => setSearchOpen(true)}
@@ -290,16 +294,16 @@ export default function App() {
       </main>
 
       {/* Global Command Palette (⌘K) */}
-      {!isAdminRoute && !isForumRoute && <CommandPalette
+      {!isAdminRoute && !isForumRoute && !isCommunityAuthRoute && <CommandPalette
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onNavigate={navigate}
       />}
 
       {/* LGPD Cookie & Privacy Banner */}
-      {!isAdminRoute && !isForumRoute && <CookieBanner onNavigateLegal={navigate} />}
+      {!isAdminRoute && !isForumRoute && !isCommunityAuthRoute && <CookieBanner onNavigateLegal={navigate} />}
 
-      {!isAdminRoute && !isForumRoute && <Footer onNavigate={navigate} language={language} />}
+      {!isAdminRoute && !isForumRoute && !isCommunityAuthRoute && <Footer onNavigate={navigate} language={language} />}
     </div>
   );
 }

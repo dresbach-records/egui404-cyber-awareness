@@ -329,6 +329,23 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate, language }) => {
         </div>
       </section>
 
+      {/* COMMUNITY FEATURE: primary interaction door before threat alerts */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-labelledby="community-title">
+        <div className="rounded-lg border border-[#5c2020] bg-[#160b0b] p-6 sm:p-8 shadow-[0_0_28px_rgba(224,0,0,0.12)]">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-3xl space-y-3">
+              <span className="text-xs font-tech font-bold uppercase tracking-[0.22em] text-[#FF5555]">E GUI 404 COMMUNITY</span>
+              <h2 id="community-title" className="font-display text-3xl uppercase tracking-wider text-white sm:text-4xl">Uma comunidade defensiva para compartilhar alertas</h2>
+              <p className="text-sm leading-6 text-neutral-300">Compartilhe relatos, analise golpes e ajude outras pessoas a reconhecer ameaças digitais.</p>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row lg:shrink-0">
+              <button onClick={() => onNavigate('/forum')} className="rounded bg-[#E00000] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#FF1A1A]">Entrar na comunidade</button>
+              <button onClick={() => onNavigate('/auth/register')} className="rounded border border-[#713030] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#FFB0B0] hover:border-[#FF5555] hover:text-white">Criar conta</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 3. SCAM ALERT COMPONENT (#10 from prompt) */}
       {latestAlert && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
