@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, Bookmark, ChevronDown, FileText, Flag, Search, Settings, Shield, Users } from 'lucide-react';
+import { Bell, Bookmark, ChevronDown, FileText, Flag, Search, Settings, Shield, TrendingUp, Users } from 'lucide-react';
 import { authApi } from '../../services/api/authApi';
 
 interface ForumPagesProps { path: string; onNavigate: (path: string) => void; }
@@ -49,6 +49,8 @@ export const ForumPages: React.FC<ForumPagesProps> = ({ path, onNavigate }) => {
   if (path === '/forum/rules') return <Rules onNavigate={onNavigate} path={path} />;
   if (path === '/forum/guidelines') return <Guidelines onNavigate={onNavigate} path={path} />;
   if (path === '/forum/create') return <Create onNavigate={onNavigate} path={path} />;
+  if (path === '/forum/popular') return <PageShell title="Publicações populares" eyebrow="Em alta" onNavigate={onNavigate}><BackendState label="Publicações populares da API" icon={<TrendingUp className="h-5 w-5" />} /></PageShell>;
+  if (path === '/forum/recent') return <PageShell title="Publicações recentes" eyebrow="Atualizações" onNavigate={onNavigate}><BackendState label="Publicações recentes da API" icon={<FileText className="h-5 w-5" />} /></PageShell>;
   if (path === '/forum/communities') return <PageShell title="Comunidades" eyebrow="Explorar" onNavigate={onNavigate}><BackendState label="Comunidades da API" icon={<Users className="h-5 w-5" />} /></PageShell>;
   if (path === '/forum/search') return <PageShell title="Pesquisa global" eyebrow="Buscar" onNavigate={onNavigate}><div className="mb-5 flex max-w-2xl items-center gap-3 rounded border border-[#333] bg-[#0B0B0B] px-4 py-3"><Search className="h-4 w-4 text-[#E00000]" /><input className="w-full bg-transparent text-sm outline-none" placeholder="Pesquisar posts, comunidades, usuários e tags" /></div><BackendState label="Resultados da API" icon={<Search className="h-5 w-5" />} /></PageShell>;
   if (path === '/forum/saved') return <PageShell title="Salvos" eyebrow="Sua biblioteca" onNavigate={onNavigate}><BackendState label="Publicações salvas" icon={<Bookmark className="h-5 w-5" />} /></PageShell>;
