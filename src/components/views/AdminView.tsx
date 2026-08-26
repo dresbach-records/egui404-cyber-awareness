@@ -44,7 +44,20 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) =>
   }, []);
 
   // Current Subroute State
-  const [currentSubRoute, setCurrentSubRoute] = useState<string>('dashboard');
+  const routeToSub = (pathname: string) => {
+    const segments = pathname.replace(/^\/admin\/?/, '').split('/').filter(Boolean);
+    if (segments.length === 0 || segments[0] === 'dashboard') return 'dashboard';
+    const routeMap: Record<string, string> = {
+      users: 'members', communities: 'forum', posts: 'forum', comments: 'moderation',
+      reports: 'reports', moderation: 'moderation', bans: 'moderation', restrictions: 'moderation',
+      threats: 'threats', scams: 'archive', indicators: 'threats', cases: 'cases', articles: 'articles',
+      alerts: 'alerts', sources: 'sources', analytics: 'analytics', audit: 'audit-logs',
+      roles: 'members', permissions: 'members', settings: 'settings', system: 'settings'
+    };
+    return routeMap[segments[0]] || 'dashboard';
+  };
+
+  const [currentSubRoute, setCurrentSubRoute] = useState<string>(() => routeToSub(window.location.pathname));
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   // Counters for Header/Sidebar badges
@@ -72,6 +85,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) =>
       return;
     }
     setCurrentSubRoute(sub);
+    onNavigate(sub === 'dashboard' ? '/admin' : `/admin/${sub}`);
   };
 
   if (isCheckingSession) {
@@ -102,7 +116,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) =>
       <div className="lg:pl-72 flex flex-col flex-1 min-w-0 transition-all duration-300">
         {/* Admin Header */}
         <AdminHeader
-          onToggleMobileSidebar={() => setIsMobileOpen(!isMobileOpen)}
+          onOpenMobileMenu={() => setIsMobileOpen(!isMobileOpen)}
           onNavigateSub={handleNavigateSub}
           currentSubRoute={currentSubRoute}
           currentUser={currentUser}
@@ -112,7 +126,13 @@ export const AdminView: React.FC<AdminViewProps> = ({ onNavigate, language }) =>
         {/* Dynamic Subview Body */}
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
           {currentSubRoute === 'dashboard' && (
-            <AdminDashboardView onNavigateSub={handleNavigateSub} />
+            <AdminDashboardView
+            onNavigateSub={handleNavigateSub}
+            onQuickAction={(action) => {
+              const routes = { NEW_THREAT: 'threats', NEW_ALERT: 'alerts', NEW_SCAM: 'archive', SYNC_RNP: 'sources-rnp' } as const;
+              handleNavigateSub(routes[action]);
+            }}
+          />
           )}
 
           {currentSubRoute === 'archive' && <AdminArchiveView />}
