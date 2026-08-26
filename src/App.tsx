@@ -183,6 +183,11 @@ export default function App() {
       return <AdminView onNavigate={navigate} language={language} />;
     }
 
+    // O editor oficial reutiliza o modal já integrado ao forumApi.
+    if (cleanPath === '/forum/create') {
+      return <ForumView initialCreate onNavigate={navigate} language={language} />;
+    }
+
     // Forum subpages are API-ready and intentionally do not invent backend data.
     if (cleanPath !== '/forum' && cleanPath.startsWith('/forum/')) {
       const forumPage = <ForumPages path={cleanPath} onNavigate={navigate} />;
