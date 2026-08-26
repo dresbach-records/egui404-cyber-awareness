@@ -20,6 +20,7 @@ import { LegalView } from './components/views/LegalViews';
 import { RnpSourceView } from './components/views/RnpSourceView';
 import { MethodologyView } from './components/views/MethodologyView';
 import { AuthView } from './components/views/AuthView';
+import { ForumPages } from './components/views/ForumPages';
 import { NotFoundView } from './components/views/NotFoundView';
 import { SoundEngine } from './services/audioService';
 
@@ -176,6 +177,12 @@ export default function App() {
 
     if (cleanPath === '/auth/login/admin') {
       return <AdminView onNavigate={navigate} language={language} />;
+    }
+
+    // Forum subpages are API-ready and intentionally do not invent backend data.
+    if (cleanPath !== '/forum' && cleanPath.startsWith('/forum/')) {
+      const forumPage = <ForumPages path={cleanPath} onNavigate={navigate} />;
+      if (forumPage) return forumPage;
     }
 
     // Community Forum: /forum or /forum/topic/:slug
