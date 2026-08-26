@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { Bell, Bookmark, Compass, Home, Menu, Search, Shield, TrendingUp, Users, X } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Bell, Bookmark, Camera, Compass, Home, LogOut, Menu, Search, Settings, Shield, TrendingUp, User, Users, X } from 'lucide-react';
 import { authApi } from '../../services/api/authApi';
+import { AuthSessionUser } from '../../services/api/types';
 
 interface ForumShellProps { currentPath: string; onNavigate: (path: string) => void; children: React.ReactNode; }
 
@@ -21,11 +22,15 @@ const links = [
 
 export const ForumShell: React.FC<ForumShellProps> = ({ currentPath, onNavigate, children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profileUser, setProfileUser] = useState<AuthSessionUser | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [sessionState, setSessionState] = useState<'checking' | 'authenticated' | 'guest'>('checking');
   useEffect(() => {
     const controller = new AbortController();
     authApi.getSession(controller.signal).then((user) => {
-      if (!controller.signal.aborted) setSessionState(user ? 'authenticated' : 'guest');
+      if (!controller.signal.aborted) { setProfileUser(user); setSessionState(user ? 'authenticated' : 'guest'); }
     });
     return () => controller.abort();
   }, []);
@@ -44,7 +49,11 @@ export const ForumShell: React.FC<ForumShellProps> = ({ currentPath, onNavigate,
           <label className="ml-auto flex max-w-xl flex-1 items-center gap-2 rounded-md border border-[#2b2e31] bg-[#111315] px-3 py-2 text-sm text-[#A1A1AA] focus-within:border-[#E00000]"><Search className="h-4 w-4 shrink-0" /><input aria-label="Pesquisar na comunidade" className="w-full bg-transparent outline-none placeholder:text-[#71757a]" placeholder="Pesquisar no Fórum E GUI 404" onKeyDown={(event) => { if (event.key === 'Enter') go(`/forum/search?q=${encodeURIComponent(event.currentTarget.value)}`); }} /></label>
           <button type="button" onClick={() => go('/forum/notifications')} className="rounded p-2 text-[#A1A1AA] hover:bg-[#17191b] hover:text-white" aria-label="Notificações"><Bell className="h-5 w-5" /></button>
           <button type="button" onClick={() => go('/forum/create')} className="hidden rounded-md bg-[#E00000] px-4 py-2 text-sm font-semibold text-white hover:bg-[#b80000] sm:block">Criar publicação</button>
-          <button type="button" onClick={() => go('/forum/u/me')} className="flex h-9 w-9 items-center justify-center rounded-full border border-[#733030] bg-[#260d0d] font-mono text-xs text-[#FF5A5A]" aria-label="Abrir perfil">EG</button>
+          <div className="relative">
+            <button type="button" onClick={() => setProfileOpen((value) => !value)} className="flex items-center gap-2 rounded-full border border-[#733030] bg-[#260d0d] p-1 pr-2 text-left hover:border-[#E00000]" aria-haspopup="menu" aria-expanded={profileOpen} aria-label="Abrir menu do perfil"><span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-[#3a1111] font-mono text-xs text-[#FF5A5A]">{avatarPreview || profileUser?.avatarUrl ? <img src={avatarPreview || profileUser?.avatarUrl} alt="Foto do perfil" className="h-full w-full object-cover" /> : (profileUser?.name || 'EG').slice(0, 2).toUpperCase()}</span><span className="hidden max-w-28 truncate text-xs text-white sm:block">{profileUser?.name || 'Meu perfil'}</span></button>
+            {profileOpen && <div role="menu" className="absolute right-0 top-12 z-50 w-64 rounded-lg border border-[#2b2e31] bg-[#111315] p-2 shadow-2xl"><div className="border-b border-[#24272a] px-3 py-3"><p className="truncate text-sm font-semibold text-white">{profileUser?.name || 'Meu perfil'}</p><p className="truncate text-xs text-[#85898e]">{profileUser?.email || 'Conta Community'}</p></div><button type="button" role="menuitem" onClick={() => { setProfileOpen(false); go('/forum/me'); }} className="mt-2 flex w-full items-center gap-3 rounded px-3 py-2.5 text-sm text-[#d5d7da] hover:bg-[#1b1e20]"><User className="h-4 w-4" />Ver perfil</button><button type="button" role="menuitem" onClick={() => avatarInputRef.current?.click()} className="flex w-full items-center gap-3 rounded px-3 py-2.5 text-sm text-[#d5d7da] hover:bg-[#1b1e20]"><Camera className="h-4 w-4" />Alterar foto</button><button type="button" role="menuitem" onClick={() => { setProfileOpen(false); go('/forum/settings'); }} className="flex w-full items-center gap-3 rounded px-3 py-2.5 text-sm text-[#d5d7da] hover:bg-[#1b1e20]"><Settings className="h-4 w-4" />Configurações</button><button type="button" role="menuitem" onClick={() => { setProfileOpen(false); void authApi.logout().then(() => go('/auth/login')); }} className="flex w-full items-center gap-3 rounded px-3 py-2.5 text-sm text-[#FF7777] hover:bg-[#2a1515]"><LogOut className="h-4 w-4" />Sair</button></div>}
+            <input ref={avatarInputRef} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; if (file.size > 5 * 1024 * 1024) { event.target.value = ''; return; } setAvatarPreview(URL.createObjectURL(file)); setProfileOpen(false); }} />
+          </div>
         </div>
       </header>
       <div className="mx-auto flex max-w-[1600px]">
