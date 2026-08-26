@@ -6,6 +6,7 @@ interface ForumShellProps { currentPath: string; onNavigate: (path: string) => v
 
 const links = [
   { label: 'Início', path: '/forum', Icon: Home },
+  { label: 'For You', path: '/forum/for-you', Icon: Compass },
   { label: 'Populares', path: '/forum/popular', Icon: TrendingUp },
   { label: 'Recentes', path: '/forum/recent', Icon: Compass },
   { label: 'Em alta', path: '/forum/trending', Icon: TrendingUp },
