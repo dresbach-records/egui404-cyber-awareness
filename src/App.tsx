@@ -21,6 +21,7 @@ import { RnpSourceView } from './components/views/RnpSourceView';
 import { MethodologyView } from './components/views/MethodologyView';
 import { AuthView } from './components/views/AuthView';
 import { ForumPages } from './components/views/ForumPages';
+import { ForumShell } from './components/forum/ForumShell';
 import { NotFoundView } from './components/views/NotFoundView';
 import { SoundEngine } from './services/audioService';
 
@@ -262,6 +263,7 @@ export default function App() {
   };
 
   const isAdminRoute = currentPath === '/admin' || currentPath.startsWith('/admin/') || currentPath === '/auth/login/admin';
+  const isForumRoute = currentPath === '/forum' || currentPath.startsWith('/forum/');
 
   return (
     <div
@@ -270,7 +272,7 @@ export default function App() {
       }`}
     >
       {/* Public shell is intentionally excluded from the Admin Control Center. */}
-      {!isAdminRoute && <Navbar
+      {!isAdminRoute && !isForumRoute && <Navbar
         currentPath={currentPath}
         onNavigate={navigate}
         onOpenSearch={() => setSearchOpen(true)}
@@ -284,20 +286,20 @@ export default function App() {
 
       {/* Main Content Stage */}
       <main className="flex-1">
-        {renderView()}
+        {isForumRoute ? <ForumShell currentPath={currentPath} onNavigate={navigate}>{renderView()}</ForumShell> : renderView()}
       </main>
 
       {/* Global Command Palette (⌘K) */}
-      {!isAdminRoute && <CommandPalette
+      {!isAdminRoute && !isForumRoute && <CommandPalette
         isOpen={searchOpen}
         onClose={() => setSearchOpen(false)}
         onNavigate={navigate}
       />}
 
       {/* LGPD Cookie & Privacy Banner */}
-      {!isAdminRoute && <CookieBanner onNavigateLegal={navigate} />}
+      {!isAdminRoute && !isForumRoute && <CookieBanner onNavigateLegal={navigate} />}
 
-      {!isAdminRoute && <Footer onNavigate={navigate} language={language} />}
+      {!isAdminRoute && !isForumRoute && <Footer onNavigate={navigate} language={language} />}
     </div>
   );
 }
