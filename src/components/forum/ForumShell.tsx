@@ -1,9 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Bell, Bookmark, Camera, Compass, Home, LogOut, Menu, Search, Settings, Shield, TrendingUp, User, Users, X } from 'lucide-react';
+import { Bell, Bookmark, Camera, Compass, FileText, Home, LogOut, Menu, MessageSquare, Search, Settings, Shield, TrendingUp, User, Users, X } from 'lucide-react';
 import { authApi } from '../../services/api/authApi';
 import { AuthSessionUser } from '../../services/api/types';
 
 interface ForumShellProps { currentPath: string; onNavigate: (path: string) => void; children: React.ReactNode; }
+
+const MessageIcon = MessageSquare;
+const FileIcon = FileText;
+
+function SidebarSection({ title, items, currentPath, go, collapsed = false }: { title: string; items: Array<{ label: string; path: string; Icon: React.ElementType }>; currentPath: string; go: (path: string) => void; collapsed?: boolean }) {
+  return <section className="mb-5"><p className={`mb-2 px-3 text-[10px] font-mono uppercase tracking-[0.2em] text-[#71757a] ${collapsed ? 'sr-only' : ''}`}>{title}</p><nav className="space-y-1">{items.map(({ label, path, Icon }) => <button key={path} title={collapsed ? label : undefined} type="button" onClick={() => go(path)} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm ${collapsed ? 'justify-center px-2' : ''} ${currentPath === path ? 'bg-[#201012] font-medium text-[#FF5A5A]' : 'text-[#A1A1AA] hover:bg-[#17191b] hover:text-white'}`}><Icon className="h-4 w-4 shrink-0" />{!collapsed && label}</button>)}</nav></section>;
+}
 
 const links = [
   { label: 'Início', path: '/forum', Icon: Home },
@@ -22,6 +29,7 @@ const links = [
 
 export const ForumShell: React.FC<ForumShellProps> = ({ currentPath, onNavigate, children }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [profileUser, setProfileUser] = useState<AuthSessionUser | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>();
@@ -57,13 +65,14 @@ export const ForumShell: React.FC<ForumShellProps> = ({ currentPath, onNavigate,
         </div>
       </header>
       <div className="mx-auto flex max-w-[1600px]">
-        <aside className={`fixed inset-y-16 left-0 z-30 w-72 border-r border-[#24272a] bg-[#090a0b] p-4 transition-transform lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:translate-x-0 ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-          <div className="mb-4 flex items-center justify-between lg:hidden"><span className="font-mono text-xs text-[#A1A1AA]">NAVEGAÇÃO</span><button type="button" onClick={() => setDrawerOpen(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></button></div>
-          <p className="mb-3 px-3 text-[10px] font-mono uppercase tracking-[0.2em] text-[#71757a]">Comunidade</p>
-          <nav className="space-y-1">{links.map(({ label, path, Icon }) => <button key={path} type="button" onClick={() => go(path)} className={`flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm ${currentPath === path ? 'bg-[#201012] font-medium text-[#FF5A5A]' : 'text-[#A1A1AA] hover:bg-[#17191b] hover:text-white'}`}><Icon className="h-4 w-4" />{label}</button>)}</nav>
-          <div className="my-6 border-t border-[#24272a]" />
-          <p className="mb-3 px-3 text-[10px] font-mono uppercase tracking-[0.2em] text-[#71757a]">Segurança</p>
-          <nav className="space-y-1"><button type="button" onClick={() => go('/forum/rules')} className="w-full rounded-md px-3 py-2.5 text-left text-sm text-[#A1A1AA] hover:bg-[#17191b] hover:text-white">Regras da comunidade</button><button type="button" onClick={() => go('/forum/guidelines')} className="w-full rounded-md px-3 py-2.5 text-left text-sm text-[#A1A1AA] hover:bg-[#17191b] hover:text-white">Guia de uso</button></nav>
+        <aside className={`fixed inset-y-16 left-0 z-30 ${sidebarCollapsed ? 'w-20' : 'w-72'} border-r border-[#24272a] bg-[#090a0b] p-4 transition-transform lg:sticky lg:top-16 lg:block lg:h-[calc(100vh-4rem)] lg:translate-x-0 ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          <div className="mb-4 flex items-center justify-between lg:hidden"><span className="font-mono text-xs text-[#A1A1AA]">NAVEGAÇÃO</span><button type="button" onClick={() => setDrawerOpen(false)} aria-label="Fechar menu"><X className="h-5 w-5" /></button></div><button type="button" onClick={() => setSidebarCollapsed((value) => !value)} className="mb-4 hidden w-full rounded border border-[#2b2e31] p-2 text-xs text-[#A1A1AA] hover:text-white lg:block" aria-label={sidebarCollapsed ? 'Expandir sidebar' : 'Recolher sidebar'}>{sidebarCollapsed ? '→' : '← Recolher'}</button>
+          <SidebarSection title="Comunidade" items={links.slice(0, 6)} currentPath={currentPath} go={go} collapsed={sidebarCollapsed} />
+          <SidebarSection title="Comunidades" items={links.slice(6, 8)} currentPath={currentPath} go={go} collapsed={sidebarCollapsed} />
+          <SidebarSection title="Biblioteca" items={links.slice(8, 10)} currentPath={currentPath} go={go} collapsed={sidebarCollapsed} />
+          <SidebarSection title="Atividade" items={[...links.slice(10, 11), { label: 'Minhas publicações', path: '/forum/me/posts', Icon: User }, { label: 'Meus comentários', path: '/forum/me/comments', Icon: MessageIcon }]} currentPath={currentPath} go={go} collapsed={sidebarCollapsed} />
+          <SidebarSection title="Segurança" items={[{ label: 'Denúncias', path: '/forum/reports', Icon: Shield }, { label: 'Regras da comunidade', path: '/forum/rules', Icon: Shield }, { label: 'Guia de uso', path: '/forum/guidelines', Icon: FileIcon }]} currentPath={currentPath} go={go} collapsed={sidebarCollapsed} />
+          <SidebarSection title="Conta" items={[{ label: 'Meu perfil', path: '/forum/me', Icon: User }, { label: 'Configurações', path: '/forum/settings', Icon: Settings }]} currentPath={currentPath} go={go} collapsed={sidebarCollapsed} />
           <div className="my-6 border-t border-[#24272a]" />
           <section aria-labelledby="categories-title" className="px-3">
             <div className="flex items-center justify-between"><p id="categories-title" className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#71757a]">Categorias</p><button type="button" onClick={() => go('/forum/categories/create')} className="text-[10px] font-semibold text-[#FF5A5A] hover:underline">Criar nova</button></div>
